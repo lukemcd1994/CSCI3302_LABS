@@ -12,13 +12,19 @@
 ********************************************/
  
 #include <Sparki.h> // include the sparki library
- 
+
+int threshold = 500;
+unsigned long loopStartTime;
+unsigned long loopStopTime;
+
 void setup() 
 {
+  
 }
  
 void loop() {
-  int threshold = 500;
+ 
+  loopStartTime = millis();
  
   int lineLeft   = sparki.lineLeft();   // measure the left IR sensor
   int lineCenter = sparki.lineCenter(); // measure the center IR sensor
@@ -53,8 +59,7 @@ void loop() {
  
   sparki.updateLCD(); // display all of the information written to the screen
 
-  timeToRun = milis();
-  delay(100 - timeToRun); //wait < .1 seconds
-  
+  loopStopTime = millis();
+  delay(100 - (loopStopTime - loopStartTime)); //wait < .1 seconds
 //  delay(100); // wait 0.1 seconds
 }
