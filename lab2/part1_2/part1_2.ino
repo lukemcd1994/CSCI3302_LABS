@@ -64,7 +64,12 @@ void loop() {
   {
     
     sparki.moveForward(); // move forward
-  }  
+  }
+
+  if(lineLeft >= threshold && lineRight >= threshold){
+    
+    sparki.println("Reached start");
+  }
  
   sparki.clearLCD(); // wipe the screen
  
@@ -101,7 +106,7 @@ void loop() {
   sparki.print("y: ");
   sparki.println(y);
   sparki.print("theta: ");
-  sparki.println(theta);
+  sparki.println((theta * 180)/3.1459);
 
   
 }
