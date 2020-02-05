@@ -12,16 +12,29 @@
 ********************************************/
  
 #include <Sparki.h> // include the sparki library
-
+#include <math.h>
+float wheel_speed = .0278;
 int threshold = 500;
 unsigned long loopStartTime;
 unsigned long loopStopTime;
+float x = 0;
+float y = 0;
+float theta = 0;
+float diameter = .0857;
 
 void setup() 
 {
   
 }
- 
+
+
+void update(){
+
+}
+
+
+
+
 void loop() {
  
   loopStartTime = millis();
@@ -29,10 +42,12 @@ void loop() {
   int lineLeft   = sparki.lineLeft();   // measure the left IR sensor
   int lineCenter = sparki.lineCenter(); // measure the center IR sensor
   int lineRight  = sparki.lineRight();  // measure the right IR sensor
+  
  
   if ( lineLeft < threshold ) // if line is below left line sensor
   {  
     sparki.moveLeft(); // turn left
+    
   }
  
   if ( lineRight < threshold ) // if line is below right line sensor
@@ -43,6 +58,7 @@ void loop() {
   // if the center line sensor is the only one reading a line
   if ( (lineCenter < threshold) && (lineLeft > threshold) && (lineRight > threshold) )
   {
+    
     sparki.moveForward(); // move forward
   }  
  
@@ -58,8 +74,21 @@ void loop() {
   sparki.println(lineRight);
  
   sparki.updateLCD(); // display all of the information written to the screen
-
+  
   loopStopTime = millis();
+
+  float arc_length = wheel_speed * .1;
+  theta = theta + arc_length/(diameter/2);
+  x = cos(theta)*(wheel_speed * .1);
+  y = sin(theta)*(wheel_speed * .1);
+  sparki.print("x: ");
+  sparki.println(x);
+  sparki.print("y: ");
+  sparki.println(y);
+  sparki.print("theta: ");
+  sparki.println(theta);
+
+   
+  
   delay(100 - (loopStopTime - loopStartTime)); //wait < .1 seconds
-//  delay(100); // wait 0.1 seconds
 }
