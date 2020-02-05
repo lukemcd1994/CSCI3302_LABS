@@ -43,16 +43,20 @@ void loop() {
   int lineCenter = sparki.lineCenter(); // measure the center IR sensor
   int lineRight  = sparki.lineRight();  // measure the right IR sensor
   
+  
+  int left_flag = 0;
+  int right_flag = 0;
  
   if ( lineLeft < threshold ) // if line is below left line sensor
   {  
     sparki.moveLeft(); // turn left
-    
+    left_flag = 1;
   }
  
   if ( lineRight < threshold ) // if line is below right line sensor
   {  
     sparki.moveRight(); // turn right
+    right_flag = 1;
   }
  
   // if the center line sensor is the only one reading a line
@@ -64,23 +68,34 @@ void loop() {
  
   sparki.clearLCD(); // wipe the screen
  
-  sparki.print("Line Left: "); // show left line sensor on screen
-  sparki.println(lineLeft);
- 
-  sparki.print("Line Center: "); // show center line sensor on screen
-  sparki.println(lineCenter);
- 
-  sparki.print("Line Right: "); // show right line sensor on screen
-  sparki.println(lineRight);
+//  sparki.print("Line Left: "); // show left line sensor on screen
+//  sparki.println(lineLeft);
+// 
+//  sparki.print("Line Center: "); // show center line sensor on screen
+//  sparki.println(lineCenter);
+// 
+//  sparki.print("Line Right: "); // show right line sensor on screen
+//  sparki.println(lineRight);
  
   sparki.updateLCD(); // display all of the information written to the screen
   
   loopStopTime = millis();
 
+
+   
+  
+  delay(100 - (loopStopTime - loopStartTime)); //wait < .1 seconds
+
   float arc_length = wheel_speed * .1;
-  theta = theta + arc_length/(diameter/2);
-  x = cos(theta)*(wheel_speed * .1);
-  y = sin(theta)*(wheel_speed * .1);
+
+  if(left_flag == 1){
+      theta = theta + arc_length/(diameter/2);
+  }
+  else if(right_flag == 1){
+      theta = theta - arc_length/(diameter/2);
+  }
+  x = x + cos(theta)*(wheel_speed * .1);
+  y = y + sin(theta)*(wheel_speed * .1);
   sparki.print("x: ");
   sparki.println(x);
   sparki.print("y: ");
@@ -88,7 +103,5 @@ void loop() {
   sparki.print("theta: ");
   sparki.println(theta);
 
-   
   
-  delay(100 - (loopStopTime - loopStartTime)); //wait < .1 seconds
 }
