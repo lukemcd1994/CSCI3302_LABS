@@ -45,34 +45,31 @@ void loop() {
   
   int left_flag = 0;
   int right_flag = 0;
-  if(lineLeft >= threshold && lineRight >= threshold && lineCenter >= threshold){ //If it sees finish, move forward and reset numbers
+  if(lineLeft <= threshold && lineRight <= threshold){ //If it sees finish, move forward and reset numbers
       sparki.moveForward();
       x = 0;
       y = 0;
       theta = 0;
   }
-  if ( lineLeft < threshold ) // if line is below left line sensor
-  {  
-    sparki.moveLeft(); // turn left
-    left_flag = 1;
-  }
- 
-  if ( lineRight < threshold ) // if line is below right line sensor
-  {  
-    sparki.moveRight(); // turn right
-    right_flag = 1;
-  }
- 
-  // if the center line sensor is the only one reading a line
-  if ( (lineCenter < threshold) && (lineLeft > threshold) && (lineRight > threshold) )
-  {
+  else {
+    if ( lineLeft < threshold ) // if line is below left line sensor
+    {  
+      sparki.moveLeft(); // turn left
+      left_flag = 1;
+    }
+   
+    if ( lineRight < threshold ) // if line is below right line sensor
+    {  
+      sparki.moveRight(); // turn right
+      right_flag = 1;
+    }
     
-    sparki.moveForward(); // move forward
-  }
-
-  if(lineLeft >= threshold && lineRight >= threshold){
-    
-    sparki.println("Reached start");
+    // if the center line sensor is the only one reading a line
+    if ( (lineCenter < threshold) && (lineLeft > threshold) && (lineRight > threshold) )
+    {
+      
+      sparki.moveForward(); // move forward
+    }
   }
  
   sparki.clearLCD(); // wipe the screen
@@ -80,18 +77,20 @@ void loop() {
   loopStopTime = millis();
   
   delay(100 - (loopStopTime - loopStartTime)); //wait < .1 seconds
-
-  float arc_length = wheel_speed * .1;
+  float loopDuration = .1; 
+  float arc_length = wheel_speed * loopDuration * 1.18;
 
   if(left_flag == 1){
       theta = theta + arc_length/(diameter/2);
   }
   else if(right_flag == 1){
       theta = theta - arc_length/(diameter/2);
+  }else {
+    x = x + cos(theta)*(wheel_speed * loopDuration);
+    y = y + sin(theta)*(wheel_speed * loopDuration);
   }
-  x = x + cos(theta)*(wheel_speed * .1);
-  y = y + sin(theta)*(wheel_speed * .1);
-
+  
+//  /
  
 
   sparki.print("x: ");
