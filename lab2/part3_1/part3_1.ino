@@ -79,12 +79,7 @@ void loop() {
 // 
 //  sparki.print("Line Right: "); // show right line sensor on screen
 //  sparki.println(lineRight);
-<<<<<<< HEAD
- 
-  // display all of the information written to the screen
-=======
 
->>>>>>> 871287cb5759a46a8e6fc4bea5aed56037c31ca2
   
   loopStopTime = millis();
   
@@ -114,11 +109,6 @@ void loop() {
   sparki.println(y);
   sparki.print("theta: ");
   sparki.println((theta * 180)/3.1459);
-<<<<<<< HEAD
-  sparki.updateLCD();
-
-=======
   sparki.updateLCD(); // display all of the information written to the screen
->>>>>>> 871287cb5759a46a8e6fc4bea5aed56037c31ca2
   
 }
