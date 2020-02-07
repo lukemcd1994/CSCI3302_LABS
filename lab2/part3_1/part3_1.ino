@@ -1,3 +1,4 @@
+
 /*******************************************
  Sparki Line-following example
  
@@ -44,7 +45,12 @@ void loop() {
   
   int left_flag = 0;
   int right_flag = 0;
- 
+  if(lineLeft >= threshold && lineRight >= threshold && lineCenter >= threshold){ //If it sees finish, move forward and reset numbers
+      sparki.moveForward();
+      x = 0;
+      y = 0;
+      theta = 0;
+  }
   if ( lineLeft < threshold ) // if line is below left line sensor
   {  
     sparki.moveLeft(); // turn left
@@ -70,16 +76,6 @@ void loop() {
   }
  
   sparki.clearLCD(); // wipe the screen
- 
-//  sparki.print("Line Left: "); // show left line sensor on screen
-//  sparki.println(lineLeft);
-// 
-//  sparki.print("Line Center: "); // show center line sensor on screen
-//  sparki.println(lineCenter);
-// 
-//  sparki.print("Line Right: "); // show right line sensor on screen
-//  sparki.println(lineRight);
-
   
   loopStopTime = millis();
   
@@ -96,12 +92,7 @@ void loop() {
   x = x + cos(theta)*(wheel_speed * .1);
   y = y + sin(theta)*(wheel_speed * .1);
 
-  if(right_flag == 1){ //If it sees finish, move forward and reset numbers
-      sparki.moveForward();
-      x = 0;
-      y = 0;
-      theta = 0;
-  }
+ 
 
   sparki.print("x: ");
   sparki.println(x);
