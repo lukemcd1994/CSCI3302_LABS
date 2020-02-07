@@ -38,13 +38,12 @@ void loop() {
  
   loopStartTime = millis();
  
-  int lineLeft   = sparki.lineLeft();   // measure the left IR sensor
-  int lineCenter = sparki.lineCenter(); // measure the center IR sensor
-  int lineRight  = sparki.lineRight();  // measure the right IR sensor
-  
-  
+  int lineLeft   = sparki.lineLeft();  
+  int lineCenter = sparki.lineCenter(); 
+  int lineRight  = sparki.lineRight();  
   int left_flag = 0;
   int right_flag = 0;
+  
   if(lineLeft <= threshold && lineRight <= threshold){ //If it sees finish, move forward and reset numbers
       sparki.moveForward();
       x = 0;
@@ -52,27 +51,23 @@ void loop() {
       theta = 0;
   }
   else {
-    if ( lineLeft < threshold ) // if line is below left line sensor
+    if ( lineLeft < threshold )
     {  
-      sparki.moveLeft(); // turn left
+      sparki.moveLeft();
       left_flag = 1;
     }
-   
-    if ( lineRight < threshold ) // if line is below right line sensor
+    if ( lineRight < threshold )
     {  
-      sparki.moveRight(); // turn right
+      sparki.moveRight();
       right_flag = 1;
     }
-    
-    // if the center line sensor is the only one reading a line
     if ( (lineCenter < threshold) && (lineLeft > threshold) && (lineRight > threshold) )
     {
-      
-      sparki.moveForward(); // move forward
+      sparki.moveForward(); 
     }
   }
  
-  sparki.clearLCD(); // wipe the screen
+  sparki.clearLCD();
   
   loopStopTime = millis();
   
@@ -89,9 +84,7 @@ void loop() {
     x = x + cos(theta)*(wheel_speed * loopDuration);
     y = y + sin(theta)*(wheel_speed * loopDuration);
   }
-  
-//  /
- 
+   
 
   sparki.print("x: ");
   sparki.println(x);
