@@ -157,7 +157,7 @@ void loop() {
     case CONTROLLER_GOTO_POSITION_PART2:
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
-      // and move the robot to its final destination
+
 
 
       break;
