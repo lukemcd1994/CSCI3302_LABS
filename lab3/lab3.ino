@@ -87,7 +87,9 @@ void readSensors() {
 
 void updateOdometry() {
   // TODO: Update pose_x, pose_y, pose_theta
-  
+   pose_x = pose_x + ROBOT_SPEED * CYCLE_TIME * cos(pose_theta);
+   pose_y = pose_y + ROBOT_SPEED * CYCLE_TIME * sin(pose_theta);
+
 
   // Bound theta
   if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
@@ -128,22 +130,22 @@ void loop() {
       readSensors();
       if (line_center < threshold) {
         // TODO: Fill in odometry code
-
-        
         sparki.moveForward();
+        
       } else if (line_left < threshold) {
         // TODO: Fill in odometry code
-
-        
+        pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
         sparki.moveLeft();
-      } else if (line_right < threshold) {
-
         
+      } else if (line_right < threshold) {
+        pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+
         // TODO: Fill in odometry code
         sparki.moveRight();
       } else {
         sparki.moveStop();
       }
+      updateOdometry();
 
       // Check for start line, use as loop closure
       if (line_left < threshold && line_right < threshold && line_center < threshold) {
