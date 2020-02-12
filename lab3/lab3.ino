@@ -1,4 +1,5 @@
-#include <sparki.h>
+#include <Sparki.h>
+#include <math.h>
 
 #define M_PI 3.14159
 #define ROBOT_SPEED 0.0275 // meters/second
@@ -71,7 +72,10 @@ void set_pose_destination(float x, float y, float t) {
   dest_pose_theta = t;
   if (dest_pose_theta > M_PI) dest_pose_theta -= 2*M_PI;
   if (dest_pose_theta < -M_PI) dest_pose_theta += 2*M_PI;
-  orig_dist_to_goal = 0; // TODO
+  
+  orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));  // TODO
+  
+  
 }
 
 void readSensors() {
@@ -83,6 +87,7 @@ void readSensors() {
 
 void updateOdometry() {
   // TODO: Update pose_x, pose_y, pose_theta
+  
 
   // Bound theta
   if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
@@ -123,11 +128,17 @@ void loop() {
       readSensors();
       if (line_center < threshold) {
         // TODO: Fill in odometry code
+
+        
         sparki.moveForward();
       } else if (line_left < threshold) {
         // TODO: Fill in odometry code
+
+        
         sparki.moveLeft();
       } else if (line_right < threshold) {
+
+        
         // TODO: Fill in odometry code
         sparki.moveRight();
       } else {
