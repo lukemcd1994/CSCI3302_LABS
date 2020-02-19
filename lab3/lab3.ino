@@ -183,6 +183,8 @@ void loop() {
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
+      sparki.RGB(RGB_GREEN);
+      delay(500);
       break;
   }
 
