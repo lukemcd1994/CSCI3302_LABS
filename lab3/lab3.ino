@@ -158,12 +158,13 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
 
-      b_err = atan((dest_pos_y - pose_y)/(dest_pos_x - pose_x));
-      sparki.moveLeft(b_err);
-
+      b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x));
+      sparki.moveLeft(to_degrees(b_err));
+      delay(1000);
       sparki.moveForward(orig_dist_to_goal);
-
-      sparki.moveLeft(pos_theta+b_err-dest_pose_theta);
+      delay(1000);
+      sparki.moveLeft(to_degrees(pose_theta+b_err-dest_pose_theta));
+      delay(2000);
 
 
       break;
