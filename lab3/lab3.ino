@@ -62,7 +62,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15,0.05, to_radians(135));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.20, 0.20, to_radians(90));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -161,14 +161,13 @@ void loop() {
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x));
       sparki.moveLeft(to_degrees(b_err));
       delay(1000);
-      sparki.moveForward(orig_dist_to_goal);
+      sparki.moveForward(orig_dist_to_goal*100);
       delay(1000);
       sparki.moveLeft(to_degrees(pose_theta+b_err-dest_pose_theta));
       delay(2000);
 
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x));
       sparki.moveLeft(b_err);
-
 
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
