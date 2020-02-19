@@ -177,6 +177,15 @@ void loop() {
       float theta_dot = b_err + h_err;
       left_speed_pct = (x_dot - theta_dot/2)/WHEEL_RADIUS;
       right_speed_pct = (x_dot + theta_dot/2)/WHEEL_RADIUS;
+
+      if(left_speed_pct > right_speed_pct){
+          pose_theta = pose_theta - (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+      }
+      if(left_speed_pct < right_speed_pct){
+          pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+      }
+
+      
       
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
