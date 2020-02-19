@@ -22,7 +22,7 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-const int current_state = CONTROLLER_GOTO_POSITION_PART2;
+const int current_state = CONTROLLER_GOTO_POSITION_PART3;
 
 // Odometry bookkeeping
 float orig_dist_to_goal = 0.0;
@@ -170,10 +170,18 @@ void loop() {
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
+      b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
+      h_err = dest_pose_theta - pose_theta;
+      orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
+      float x_dot = orig_dist_to_goal;
+      float theta_dot = b_err + h_err;
+      left_speed_pct = (x_dot - theta_dot/2)/WHEEL_RADIUS;
+      right_speed_pct = (x_dot + theta_dot/2)/WHEEL_RADIUS;
+      
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
-      //      sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
-      //      sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
+      sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
+      sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
       break;
   }
