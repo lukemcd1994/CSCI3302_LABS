@@ -163,11 +163,9 @@ void loop() {
       delay(1000);
       sparki.moveForward(orig_dist_to_goal*100);
       delay(1000);
-      sparki.moveLeft(to_degrees(pose_theta+b_err-dest_pose_theta));
+      sparki.moveLeft(to_degrees(pose_theta-b_err+dest_pose_theta));
       delay(2000);
 
-      b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x));
-      sparki.moveLeft(b_err);
 
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
