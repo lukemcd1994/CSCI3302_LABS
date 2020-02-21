@@ -3,7 +3,7 @@
 
 #define M_PI 3.14159
 #define ROBOT_SPEED 0.0275 // meters/second
-#define CYCLE_TIME .050 // Default 50ms cycle time
+#define CYCLE_TIME .100 // Default 100ms cycle time
 #define AXLE_DIAMETER 0.0857 // meters
 #define WHEEL_RADIUS 0.03 // meters
 #define CONTROLLER_FOLLOW_LINE 1
@@ -103,6 +103,7 @@ void updateOdometry() {
 
     float d_theta = (d_right - d_left)/AXLE_DIAMETER;
     pose_theta += d_theta;
+
     if (d_theta){
     float r_left = d_left/d_theta;
     float r_right = d_right/d_theta;
@@ -186,29 +187,26 @@ void loop() {
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
 
+      if (orig_dist_to_goal > 1){
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
-      h_err = dest_pose_theta - pose_theta;
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
-      float x_dot = orig_dist_to_goal;
-      float theta_dot = b_err + h_err;
-      left_speed_pct = (x_dot - theta_dot/2)/WHEEL_RADIUS;
-      right_speed_pct = (x_dot + theta_dot/2)/WHEEL_RADIUS;
+      //float x_dot = orig_dist_to_goal;
+      //float theta_dot = b_err + h_err;
+      left_speed_pct = 1 - b_err;
+      right_speed_pct = 1 + b_err;
 
-      if(left_speed_pct > right_speed_pct){
-          pose_theta = pose_theta - (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
-      }
-      if(left_speed_pct < right_speed_pct){
-          pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
-      }
-
-      //hi
-      
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
+      sparki.RGB(RGB_ORANGE);}
+      else {
+      h_err = dest_pose_theta - pose_theta;
+      sparki.moveLeft(to_degrees(h_err));
       sparki.RGB(RGB_GREEN);
+      delay(5000);
+      }
       //delay(500);
       break;
   }
