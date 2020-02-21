@@ -187,7 +187,7 @@ void loop() {
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
 
-      if (orig_dist_to_goal > 1){
+      if (orig_dist_to_goal > 0.01){
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
       //float x_dot = orig_dist_to_goal;
