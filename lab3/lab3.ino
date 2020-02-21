@@ -105,8 +105,8 @@ void updateOdometry() {
     float r_left = d_left/d_theta;
     float r_right = d_right/d_theta;
 
-    pose_x += cos(d_theta)*(r_left + r_right)
-    pose_y += sin(d_theta)*(r_left + r_right)
+    pose_x += cos(d_theta)*(r_left + r_right)/2
+    pose_y += sin(d_theta)*(r_left + r_right)/2
 }
 
 void displayOdometry() {
