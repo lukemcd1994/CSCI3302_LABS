@@ -97,18 +97,19 @@ void updateOdometry() {
 
     //left_speed_pct = 0.;
     //right_speed_pct = 0.;
+    
     float d_left = left_speed_pct*CYCLE_TIME;
-    float d_right = right_speed_pct*CYCLE_TIME
+    float d_right = right_speed_pct*CYCLE_TIME;
 
     float d_theta = (d_right - d_left)/AXLE_DIAMETER;
     pose_theta += d_theta;
     if (d_theta){
     float r_left = d_left/d_theta;
     float r_right = d_right/d_theta;
+    pose_x += cos(d_theta)*(r_left + r_right)/2;
+    pose_y += sin(d_theta)*(r_left + r_right)/2;
     }
 
-    pose_x += cos(d_theta)*(r_left + r_right)/2
-    pose_y += sin(d_theta)*(r_left + r_right)/2
 }
 
 void displayOdometry() {
