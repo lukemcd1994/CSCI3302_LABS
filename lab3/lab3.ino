@@ -178,12 +178,7 @@ void loop() {
       left_speed_pct = (x_dot - theta_dot/2)/WHEEL_RADIUS;
       right_speed_pct = (x_dot + theta_dot/2)/WHEEL_RADIUS;
 
-      if(left_speed_pct > right_speed_pct){
-          pose_theta = pose_theta - (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
-      }
-      if(left_speed_pct < right_speed_pct){
-          pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
-      }
+      pose_theta = pose_theta + (right_speed_pct - left_speed_pct )*(CYCLE_TIME)/(WHEEL_RADIUS);
 
       
       
@@ -192,8 +187,6 @@ void loop() {
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
-      sparki.RGB(RGB_GREEN);
-      delay(500);
       break;
   }
 
