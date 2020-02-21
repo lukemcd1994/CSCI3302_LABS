@@ -157,7 +157,6 @@ void loop() {
     case CONTROLLER_GOTO_POSITION_PART2:
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
-
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x));
       sparki.moveLeft(to_degrees(b_err));
       delay(1000);
@@ -170,6 +169,7 @@ void loop() {
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
+
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
       h_err = dest_pose_theta - pose_theta;
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
@@ -180,7 +180,7 @@ void loop() {
 
       pose_theta = pose_theta + (right_speed_pct - left_speed_pct )*(CYCLE_TIME)/(WHEEL_RADIUS);
 
-      
+      //hi
       
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
