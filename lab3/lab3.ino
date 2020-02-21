@@ -87,13 +87,17 @@ void readSensors() {
 
 void updateOdometry() {
   // TODO: Update pose_x, pose_y, pose_theta
-   pose_x = pose_x + ROBOT_SPEED * CYCLE_TIME * cos(pose_theta);
+   /*pose_x = pose_x + ROBOT_SPEED * CYCLE_TIME * cos(pose_theta);
    pose_y = pose_y + ROBOT_SPEED * CYCLE_TIME * sin(pose_theta);
 
 
   // Bound theta
   if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
-  if (pose_theta <= -M_PI) pose_theta += 2.*M_PI;
+  if (pose_theta <= -M_PI) pose_theta += 2.*M_PI;*/
+
+    //left_speed_pct = 0.;
+    //right_speed_pct = 0.;
+    pose_theta += (right_speed_pct*CYCLE_TIME - left_speed_pct*CYCLE_TIME)/AXLE_DIAMETER
 }
 
 void displayOdometry() {
@@ -193,7 +197,7 @@ void loop() {
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
       sparki.RGB(RGB_GREEN);
-      delay(500);
+      //delay(500);
       break;
   }
 
