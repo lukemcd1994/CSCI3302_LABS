@@ -3,7 +3,7 @@
 
 #define M_PI 3.14159
 #define ROBOT_SPEED 0.0275 // meters/second
-#define CYCLE_TIME .100 // Default 100ms cycle time
+#define CYCLE_TIME 0.100 // Default 100ms cycle time
 #define AXLE_DIAMETER 0.0857 // meters
 #define WHEEL_RADIUS 0.03 // meters
 #define CONTROLLER_FOLLOW_LINE 1
@@ -57,7 +57,8 @@ float to_degrees(double rad) {
 void setup() {
   pose_x = 0.;
   pose_y = 0.;
-  pose_theta = 0.;
+  pose_theta = to_radians(45);
+  //pose_theta = 0.;
   left_wheel_rotating = NONE;
   right_wheel_rotating = NONE;
 
@@ -103,11 +104,14 @@ void updateOdometry() {
     float d_theta = (d_right - d_left)/AXLE_DIAMETER;
     pose_theta += d_theta;
 
-    if (d_theta){
+    if (d_theta == 0){
+        pose_x += cos(pose_theta)*(d_left);
+        pose_y += sin(pose_theta)*(d_left);
+    } else {
     float r_left = d_left/d_theta;
     float r_right = d_right/d_theta;
-    pose_x += cos(d_theta)*(r_left + r_right)/2;
-    pose_y += sin(d_theta)*(r_left + r_right)/2;
+    pose_x += cos(pose_theta)*(r_left + r_right)/2;
+    pose_y += sin(pose_theta)*(r_left + r_right)/2;
     }
 
 }
@@ -151,7 +155,7 @@ void loop() {
         
       } else if (line_left < threshold) {
         // TODO: Fill in odometry code
-        pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+        pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME*1000)/(AXLE_DIAMETER/2);
         sparki.moveLeft();
         
       } else if (line_right < threshold) {
@@ -189,11 +193,12 @@ void loop() {
       if (orig_dist_to_goal > 0.01){
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
-      //float x_dot = orig_dist_to_goal;
-      //float theta_dot = b_err + h_err;
-      left_speed_pct = 0.5 - b_err/3.2;
-      right_speed_pct = 0.5 + b_err/3.2;
-
+      float x_dot = orig_dist_to_goal;
+      float theta_dot = b_err + h_err;
+       left_speed_pct = 0.5 - b_err/3.2;
+       right_speed_pct = 0.5 + b_err/3.2;
+      //left_speed_pct = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
+      //right_speed_pct = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
@@ -208,6 +213,11 @@ void loop() {
       delay(5000);
       }
       //delay(500);
+      break;
+
+      case 4:
+      sparki.motorRotate(MOTOR_LEFT, left_dir, 10);
+      sparki.motorRotate(MOTOR_RIGHT, right_dir, 10);
       break;
   }
 
