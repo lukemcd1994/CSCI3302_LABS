@@ -33,8 +33,8 @@ float phi_l = 0., phi_r = 0.; // Wheel rotation (radians)
 
 
 // Wheel rotation vars
-float left_speed_pct = 0.;
-float right_speed_pct = 0.;
+float left_speed_pct = 0;
+float right_speed_pct = 0;
 int left_dir = DIR_CCW;
 int right_dir = DIR_CW;
 int left_wheel_rotating = NONE;
@@ -54,11 +54,12 @@ float to_degrees(double rad) {
   return  rad * 180/3.1415;
 }
 
+
 void setup() {
-  pose_x = 0.;
-  pose_y = 0.;
+  //pose_x = 0.0;
+  //pose_y = 0.0;
   pose_theta = to_radians(45);
-  //pose_theta = 0.;
+  //pose_theta = 0.0;
   left_wheel_rotating = NONE;
   right_wheel_rotating = NONE;
 
@@ -102,13 +103,18 @@ void updateOdometry() {
     float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
 
     float d_theta = (d_right - d_left)/AXLE_DIAMETER;
-    pose_theta += d_theta;
+    //pose_theta += d_theta;
 
-    if (d_theta == 0){
+    if (d_theta <= 0.0001){//As long as direction is close enough to straight...
         pose_x += cos(pose_theta)*(d_left);
         pose_y += sin(pose_theta)*(d_left);
-    } else {
-    float r_left = d_left/d_theta;
+    }
+    else {
+    //first find center of turn
+        float r_left = d_left/d_theta;
+        //center_x = pose_x + cos()
+
+    //float r_left = d_left/d_theta;
     float r_right = d_right/d_theta;
     pose_x += cos(pose_theta)*(r_left + r_right)/2;
     pose_y += sin(pose_theta)*(r_left + r_right)/2;
@@ -117,6 +123,7 @@ void updateOdometry() {
 }
 
 void displayOdometry() {
+
   sparki.print("X: ");
   sparki.print(pose_x);
   sparki.print(" Xg: ");
@@ -130,9 +137,11 @@ void displayOdometry() {
   sparki.print(" Tg: ");
   sparki.println(to_degrees(dest_pose_theta));
 
-  sparki.print("dX : ");
-  sparki.print(dX );
-  sparki.print("   dT: ");
+  //sparki.print("dX : ");
+  //sparki.print(dX );
+  sparki.print("odg: ");
+  sparki.print(orig_dist_to_goal);
+  sparki.print(" dT: ");
   sparki.println(dTheta);
   sparki.print("phl: "); sparki.print(phi_l); sparki.print(" phr: "); sparki.println(phi_r);
   sparki.print("p: "); sparki.print(d_err); sparki.print(" a: "); sparki.println(to_degrees(b_err));
@@ -195,8 +204,8 @@ void loop() {
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
       float x_dot = orig_dist_to_goal;
       float theta_dot = b_err + h_err;
-       left_speed_pct = 0.5 - b_err/3.2;
-       right_speed_pct = 0.5 + b_err/3.2;
+      left_speed_pct = 0.5 - b_err/3.2;
+      right_speed_pct = 0.5 + b_err/3.2;
       //left_speed_pct = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       //right_speed_pct = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
@@ -210,14 +219,9 @@ void loop() {
       h_err = dest_pose_theta - pose_theta;
       sparki.moveLeft(to_degrees(h_err));
       sparki.RGB(RGB_GREEN);
-      delay(5000);
+      delay(10000);
       }
       //delay(500);
-      break;
-
-      case 4:
-      sparki.motorRotate(MOTOR_LEFT, left_dir, 10);
-      sparki.motorRotate(MOTOR_RIGHT, right_dir, 10);
       break;
   }
 
