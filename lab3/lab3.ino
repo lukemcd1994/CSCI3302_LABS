@@ -51,7 +51,7 @@ float to_radians(double deg) {
 }
 
 float to_degrees(double rad) {
-  return  rad * 180 / 3.1415;
+  return  rad * 180/3.1415;
 }
 
 void setup() {
@@ -62,7 +62,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.20, 0.20, to_radians(90));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15, 0.15, to_radians(90));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -90,7 +90,6 @@ void updateOdometry() {
    /*pose_x = pose_x + ROBOT_SPEED * CYCLE_TIME * cos(pose_theta);
    pose_y = pose_y + ROBOT_SPEED * CYCLE_TIME * sin(pose_theta);
 
-
   // Bound theta
   if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
   if (pose_theta <= -M_PI) pose_theta += 2.*M_PI;*/
@@ -98,8 +97,8 @@ void updateOdometry() {
     //left_speed_pct = 0.;
     //right_speed_pct = 0.;
     
-    float d_left = left_speed_pct*CYCLE_TIME;
-    float d_right = right_speed_pct*CYCLE_TIME;
+    float d_left = left_speed_pct*CYCLE_TIME*ROBOT_SPEED;
+    float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
 
     float d_theta = (d_right - d_left)/AXLE_DIAMETER;
     pose_theta += d_theta;
@@ -135,6 +134,7 @@ void displayOdometry() {
   sparki.print("p: "); sparki.print(d_err); sparki.print(" a: "); sparki.println(to_degrees(b_err));
   sparki.print("h: "); sparki.println(to_degrees(h_err));
 }
+
 
 void loop() {
   unsigned long begin_time = millis();
@@ -182,7 +182,6 @@ void loop() {
       sparki.moveLeft(to_degrees(pose_theta-b_err+dest_pose_theta));
       delay(2000);
 
-
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
@@ -192,13 +191,14 @@ void loop() {
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
       //float x_dot = orig_dist_to_goal;
       //float theta_dot = b_err + h_err;
-      left_speed_pct = 1 - b_err;
-      right_speed_pct = 1 + b_err;
+      left_speed_pct = 0.5 - b_err/3.2;
+      right_speed_pct = 0.5 + b_err/3.2;
 
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
+
 
       sparki.RGB(RGB_ORANGE);}
       else {
