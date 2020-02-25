@@ -99,26 +99,38 @@ void updateOdometry() {
     //left_speed_pct = 0.;
     //right_speed_pct = 0.;
     
-    float d_left = left_speed_pct*CYCLE_TIME*ROBOT_SPEED;
-    float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
+//    float d_left = left_speed_pct*CYCLE_TIME*ROBOT_SPEED;
+//    float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
+//
+//    float d_theta = (d_right - d_left)/AXLE_DIAMETER;
+//    //pose_theta += d_theta;
+//
+//    if (d_theta <= 0.0001){//As long as direction is close enough to straight...
+//        pose_x += cos(pose_theta)*(d_left);
+//        pose_y += sin(pose_theta)*(d_left);
+//    }
+//    else {
+//    //first find center of turn
+//        float r_left = d_left/d_theta;
+//        //center_x = pose_x + cos()
+//
+//    //float r_left = d_left/d_theta;
+//    float r_right = d_right/d_theta;
+//    pose_x += cos(pose_theta)*(r_left + r_right)/2;
+//    pose_y += sin(pose_theta)*(r_left + r_right)/2;
+//    }
 
-    float d_theta = (d_right - d_left)/AXLE_DIAMETER;
-    //pose_theta += d_theta;
-
-    if (d_theta <= 0.0001){//As long as direction is close enough to straight...
-        pose_x += cos(pose_theta)*(d_left);
-        pose_y += sin(pose_theta)*(d_left);
-    }
-    else {
-    //first find center of turn
-        float r_left = d_left/d_theta;
-        //center_x = pose_x + cos()
-
-    //float r_left = d_left/d_theta;
-    float r_right = d_right/d_theta;
-    pose_x += cos(pose_theta)*(r_left + r_right)/2;
-    pose_y += sin(pose_theta)*(r_left + r_right)/2;
-    }
+      if(left_speed_pct > right_speed_pct){
+        pose_theta = pose_theta - (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+      }
+      else if(left_speed_pct < right_speed_pct){
+        pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+      }
+      else{
+            
+            pose_x = pose_x + cos(pose_theta)*(ROBOT_SPEED * CYCLE_TIME);
+            pose_y = pose_y + sin(pose_theta)*(ROBOT_SPEED * CYCLE_TIME);
+      }
 
 }
 
@@ -204,12 +216,21 @@ void loop() {
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
       float x_dot = orig_dist_to_goal;
       float theta_dot = b_err + h_err;
-      left_speed_pct = 0.5 - b_err/3.2;
-      right_speed_pct = 0.5 + b_err/3.2;
-      //left_speed_pct = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
-      //right_speed_pct = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
+//      left_speed_pct = 0.5 - b_err/3.2;
+//      right_speed_pct = 0.5 + b_err/3.2;
+      phi_l = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
+      phi_r = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
+      if(phi_l >= phi_r){
+        left_speed_pct = 1.0;
+        right_speed_pct = phi_r/phi_l;
+      }
+      else{
+        right_speed_pct = 1.0;
+        left_speed_pct = phi_l/phi_r;
+      }
+ 
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
