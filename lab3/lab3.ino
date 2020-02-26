@@ -65,7 +65,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15, 0.15, to_radians(60));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15, 0.15, to_radians(30));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -216,8 +216,11 @@ void loop() {
       if (orig_dist_to_goal > 0.01){
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
-      float x_dot = orig_dist_to_goal;
-      float theta_dot = b_err + h_err;
+      float x_dot = orig_dist_to_goal*.1;
+      if (x_dot > .3) {
+        x_dot = .3;
+      }
+      float theta_dot = b_err*.6 + h_err*.6;
       phi_l = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       phi_r = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
@@ -241,6 +244,7 @@ void loop() {
       sparki.RGB(RGB_GREEN);
 //      h_err = dest_pose_theta - pose_theta;
 //      sparki.moveLeft(to_degrees(h_err));
+        sparki.moveStop();
       delay(10000);
       }
       //delay(500);
