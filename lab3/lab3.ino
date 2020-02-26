@@ -23,6 +23,7 @@ int line_right = 1000;
 
 // Controller and dTheta update rule settings
 const int current_state = CONTROLLER_GOTO_POSITION_PART3;
+//const int current_state = /
 
 // Odometry bookkeeping
 float orig_dist_to_goal = 0.0;
@@ -64,7 +65,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15, 0.15, to_radians(90));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15, 0.15, to_radians(60));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -122,8 +123,8 @@ void updateOdometry() {
 //
 //     
 
-      pose_x = pose_x + cos(pose_theta)*((WHEEL_RADIUS * phi_l)/2  + (WHEEL_RADIUS * phi_r)/2);
-      pose_y = pose_y + sin(pose_theta)*((WHEEL_RADIUS * phi_l)/2  + (WHEEL_RADIUS * phi_r)/2);
+      pose_x = pose_x + cos(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
+      pose_y = pose_y + sin(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
       pose_theta = pose_theta + (right_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER - (left_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER; 
 
       
