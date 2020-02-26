@@ -23,6 +23,7 @@ int line_right = 1000;
 
 // Controller and dTheta update rule settings
 const int current_state = CONTROLLER_GOTO_POSITION_PART3;
+//const int current_state = /
 
 // Odometry bookkeeping
 float orig_dist_to_goal = 0.0;
@@ -64,7 +65,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15, 0.15, to_radians(90));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15, 0.15, to_radians(60));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -116,6 +117,11 @@ void updateOdometry() {
     pose_x += cos(pose_theta + d_theta/2)*(d_left+d_right)/2;
     pose_y += sin(pose_theta + d_theta/2)*(d_left+d_right)/2;
     pose_theta += d_theta;
+
+    //pose_x = pose_x + cos(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
+    //pose_y = pose_y + sin(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
+    //pose_theta = pose_theta + (right_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER - (left_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER;
+
 }
 
 void displayOdometry() {
@@ -205,14 +211,6 @@ void loop() {
       h_err = dest_pose_theta - pose_theta;
       float x_dot = orig_dist_to_goal;
       float theta_dot = b_err + h_err;
-
-      //left_speed_pct = 0.5 - b_err/M_PI;
-      //right_speed_pct = 0.5 + b_err/M_PI;
-      //left_speed_pct = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER/10;
-      //right_speed_pct = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER/10;
-
-//      left_speed_pct = 0.5 - b_err/3.2;
-//      right_speed_pct = 0.5 + b_err/3.2;
       phi_l = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       phi_r = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
@@ -234,8 +232,8 @@ void loop() {
       sparki.RGB(RGB_ORANGE);
       } else { // goal reached
       sparki.RGB(RGB_GREEN);
-      h_err = dest_pose_theta - pose_theta;
-      sparki.moveLeft(to_degrees(h_err));
+//      h_err = dest_pose_theta - pose_theta;
+//      sparki.moveLeft(to_degrees(h_err));
       delay(10000);
       }
       //delay(500);
