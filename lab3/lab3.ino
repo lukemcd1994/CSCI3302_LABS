@@ -97,38 +97,30 @@ void updateOdometry() {
   if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
   if (pose_theta <= -M_PI) pose_theta += 2.*M_PI;*/
 
-    //left_speed_pct = 0.;
-    //right_speed_pct = 0.;
-//
-//    float d_left = left_speed_pct*CYCLE_TIME*ROBOT_SPEED;
-//    float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
-//
-//    float d_theta = (d_right - d_left)/AXLE_DIAMETER;
-//    //pose_theta += d_theta;
-//
-//    if (d_theta <= 0.0001){//As long as direction is close enough to straight...
-//        pose_x += cos(pose_theta)*(d_left);
-//        pose_y += sin(pose_theta)*(d_left);
-//    } else {
-//        float r_left = d_left/d_theta;
-//        float robot_to_center = AXLE_DIAMETER/2 + r_left;
-//        pose_x = pose_x + (-cos(pose_theta) + cos(pose_theta+d_theta))*robot_to_center;
-//        pose_y = pose_y + (-sin(pose_theta) + sin(pose_theta+d_theta))*robot_to_center;
-//        pose_theta += d_theta;
-//
-//    //float r_left = d_left/d_theta;
-//    //float r_right = d_right/d_theta;
-//    //pose_x += cos(pose_theta)*(r_left + r_right)/2;
-//    //pose_y += sin(pose_theta)*(r_left + r_right)/2;
-//
-//     
+    float d_left = left_speed_pct*CYCLE_TIME*ROBOT_SPEED;
+    float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
 
-      pose_x = pose_x + cos(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
-      pose_y = pose_y + sin(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
-      pose_theta = pose_theta + (right_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER - (left_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER; 
+    float d_theta = (d_right - d_left)/AXLE_DIAMETER;
+/*
+    if (d_theta <= 0.0001){//As long as direction is close enough to straight...
+        pose_x += cos(pose_theta)*(d_left);
+        pose_y += sin(pose_theta)*(d_left);
+    } else {
+        float th = pose_theta - M_PI/2;
+        float r_left = d_left/d_theta;
+        float robot_to_center = AXLE_DIAMETER/2 + r_left;
+        pose_y = pose_y + (cos(th) - cos(th+d_theta))*robot_to_center;
+        pose_x = pose_x + (sin(th) - sin(th+d_theta))*robot_to_center;
+        pose_theta += d_theta;
+    }*/
 
-      
-      
+    pose_x += cos(pose_theta + d_theta/2)*(d_left+d_right)/2;
+    pose_y += sin(pose_theta + d_theta/2)*(d_left+d_right)/2;
+    pose_theta += d_theta;
+
+    //pose_x = pose_x + cos(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
+    //pose_y = pose_y + sin(pose_theta)*((ROBOT_SPEED * CYCLE_TIME * left_speed_pct)/2  + (ROBOT_SPEED * CYCLE_TIME * right_speed_pct)/2);
+    //pose_theta = pose_theta + (right_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER - (left_speed_pct * ROBOT_SPEED * CYCLE_TIME)/AXLE_DIAMETER;
 
 }
 
@@ -216,11 +208,17 @@ void loop() {
       if (orig_dist_to_goal > 0.01){
       b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
+<<<<<<< HEAD
       float x_dot = orig_dist_to_goal*.1;
       if (x_dot > .3) {
         x_dot = .3;
       }
       float theta_dot = b_err*.6 + h_err*.6;
+=======
+      h_err = dest_pose_theta - pose_theta;
+      float x_dot = orig_dist_to_goal;
+      float theta_dot = b_err + h_err;
+>>>>>>> bba6674ea332c3daa3f1743b04da1c1845368d96
       phi_l = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       phi_r = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
