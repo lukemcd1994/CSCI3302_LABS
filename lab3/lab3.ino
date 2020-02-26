@@ -98,7 +98,7 @@ void updateOdometry() {
 
     //left_speed_pct = 0.;
     //right_speed_pct = 0.;
-    
+
     float d_left = left_speed_pct*CYCLE_TIME*ROBOT_SPEED;
     float d_right = right_speed_pct*CYCLE_TIME*ROBOT_SPEED;
 
@@ -120,6 +120,19 @@ void updateOdometry() {
     //pose_x += cos(pose_theta)*(r_left + r_right)/2;
     //pose_y += sin(pose_theta)*(r_left + r_right)/2;
     }
+/*
+      if(left_speed_pct > right_speed_pct){
+        pose_theta = pose_theta - (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+      }
+      else if(left_speed_pct < right_speed_pct){
+        pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
+      }
+      else{
+            
+            pose_x = pose_x + cos(pose_theta)*(ROBOT_SPEED * CYCLE_TIME);
+            pose_y = pose_y + sin(pose_theta)*(ROBOT_SPEED * CYCLE_TIME);
+      }
+*/
 }
 
 void displayOdometry() {
@@ -208,12 +221,27 @@ void loop() {
       orig_dist_to_goal = sqrt(pow((dest_pose_x - pose_x), 2) + pow((dest_pose_y - pose_y), 2));
       float x_dot = orig_dist_to_goal;
       float theta_dot = b_err + h_err;
+
       //left_speed_pct = 0.5 - b_err/M_PI;
       //right_speed_pct = 0.5 + b_err/M_PI;
-      left_speed_pct = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER/10;
-      right_speed_pct = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER/10;
+      //left_speed_pct = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER/10;
+      //right_speed_pct = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER/10;
+
+//      left_speed_pct = 0.5 - b_err/3.2;
+//      right_speed_pct = 0.5 + b_err/3.2;
+      phi_l = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
+      phi_r = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
       // TODO: Implement solution using motorRotate and proportional feedback controller.
       // sparki.motorRotate function calls for reference:
+      if(phi_l >= phi_r){
+        left_speed_pct = 1.0;
+        right_speed_pct = phi_r/phi_l;
+      }
+      else{
+        right_speed_pct = 1.0;
+        left_speed_pct = phi_l/phi_r;
+      }
+ 
       sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
       sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
