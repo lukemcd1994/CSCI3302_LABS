@@ -14,6 +14,17 @@
 #define NONE 0
 #define BCK -1
 
+/*
+range or workable final angle (h_err) for each starting bearing error:
+
+b_err: min_h_err to max_h_err
+60:  -65 to 90
+45:  -70 to 89
+0:   -80 to 80
+-45: -89 to 70
+-60: -90 to 65
+*/
+
 // Line following configuration variables
 const int threshold = 700;
 int line_left = 1000;
@@ -62,7 +73,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15, 0.15, to_radians(0));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15, 0.15, to_radians(-40));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
