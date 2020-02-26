@@ -62,7 +62,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.1, 0.18, to_radians(-65));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15, 0.15, to_radians(0));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -151,12 +151,12 @@ void loop() {
       if (line_center < threshold) {
         // TODO: Fill in odometry code
         sparki.moveForward();
-        
+
       } else if (line_left < threshold) {
         // TODO: Fill in odometry code
         pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME*1000)/(AXLE_DIAMETER/2);
         sparki.moveLeft();
-        
+
       } else if (line_right < threshold) {
         pose_theta = pose_theta + (ROBOT_SPEED*CYCLE_TIME)/(AXLE_DIAMETER/2);
 
@@ -198,7 +198,7 @@ void loop() {
           b_err = atan((dest_pose_y - pose_y)/(dest_pose_x - pose_x)) - pose_theta;
           //h_err = dest_pose_theta - pose_theta;
           //float x_dot = orig_dist_to_goal;
-          float theta_dot = b_err + h_err;
+          //float theta_dot = 0.1*b_err + 0.01*h_err;
           //phi_l = (2*x_dot - theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
           //phi_r = (2*x_dot + theta_dot*AXLE_DIAMETER)/AXLE_DIAMETER;
           //phi_l = (x_dot - (b_err*(0.01+x_dot) + h_err*0.025));
@@ -220,11 +220,10 @@ void loop() {
           }
 
           //begin_time = millis(); //make sure motor run full amount of cycle time.
-          if(left_speed_pct>0) sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
+          if(left_speed_pct>=0) sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
           else sparki.motorRotate(MOTOR_LEFT, right_dir, -int(left_speed_pct*100.));
-          if(right_speed_pct>0) sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
+          if(right_speed_pct>=0) sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
           else sparki.motorRotate(MOTOR_RIGHT, left_dir, -int(right_speed_pct*100.));
-
 
           sparki.RGB(RGB_ORANGE);
       } else { // goal reached
@@ -246,6 +245,4 @@ void loop() {
   }
   else
     delay(10);
-
-   //sparki.updateLCD();
 }
