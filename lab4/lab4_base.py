@@ -15,7 +15,7 @@ servo_angle = 0
 ir_readings = [0, 0, 0, 0, 0] #0 is far left, 4 is far right
  
 #TODO: Create data structure to hold map representation
-array = [[0 for i in range(10)] for i in range(10)]
+array = [[0 for i in range(10)] for j in range(10)]
 
 # TODO: Use these variables to hold your publishers and subscribers
 publisher_motor = None
