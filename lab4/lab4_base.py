@@ -9,7 +9,7 @@ from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 # GLOBALS 
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
 #TODO: Track servo angle in radians
-servo_angle = 0
+servo_angle = 0;
 
 #TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0] #0 is far left, 4 is far right
@@ -67,6 +67,17 @@ def init():
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
     #TODO: Set up your publishers and subscribers
+
+    publisher_motor = rospy.Publisher('motor_command', Float32MultiArray, queue_size = 10)
+    publisher_ping = rospy.Publisher('ping_command', Empty, queue_size = 10)
+    publisher_servo = rospy.Publisher('servo_command', Int16, queue_size = 10)
+    publisher_odom = rospy.Publisher('odometry', Pose2D, queue_size = 10)
+
+    subscriber_odometry = rospy.Subscriber("odometry", Pose2D, queue_size = 10)
+    subscriber_odometry = rospy.Subscriber("subscriber_state", String, queue_size = 10)
+
+    
+
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
 
