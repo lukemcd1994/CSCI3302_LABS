@@ -9,8 +9,22 @@ from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 # GLOBALS 
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
 #TODO: Track servo angle in radians
+servo_angle = 0
+
 #TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
+ir_readings = [0, 0, 0, 0, 0] #0 is far left, 4 is far right
+ 
 #TODO: Create data structure to hold map representation
+array = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
 # TODO: Use these variables to hold your publishers and subscribers
 publisher_motor = None
