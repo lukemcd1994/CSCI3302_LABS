@@ -5,7 +5,6 @@ import time
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 
-
 # GLOBALS 
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
 #TODO: Track servo angle in radians
@@ -35,21 +34,34 @@ def main():
     global pose2d_sparki_odometry
 
     #TODO: Init your node to register it with the ROS core
+    rospy.init_node('obstaclefinder', anonymous = True)
     init()
 
+
     while not rospy.is_shutdown():
-        #TODO: Implement CYCLE TIME
+       # #TODO: Implement CYCLE TIME
+	begin_time = time.time()
+  	end_time = 0
+	delay_time = 0
+	
 
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
+
+	
 
         #TODO: Implement loop closure here
         if False:
             rospy.loginfo("Loop Closure Triggered")
 
         #TODO: Implement CYCLE TIME
-        rospy.sleep(0)
+	end_time = time.time()
+	delay_time = end_time - begin_time
+	if delay_time < CYCLE_TIME:
+		rospy.sleep(1*CYCLE_TIME - delay_time)
+	else:
+		rospy.sleep(.1)
 
 
 
@@ -59,19 +71,26 @@ def init():
     global pose2d_sparki_odometry
     #TODO: Set up your publishers and subscribers
 
-    publisher_motor = rospy.Publisher('motor_command', Float32MultiArray, queue_size = 10)
-    publisher_ping = rospy.Publisher('ping_command', Empty, queue_size = 10)
-    publisher_servo = rospy.Publisher('servo_command', Int16, queue_size = 10)
-    publisher_odom = rospy.Publisher('odometry', Pose2D, queue_size = 10)
-
-    subscriber_odometry = rospy.Subscriber("odometry", Pose2D, queue_size = 10)
-    subscriber_odometry = rospy.Subscriber("subscriber_state", String, queue_size = 10)
-
+    publisher_motor = rospy.Publisher('/sparki/motor_command', Float32MultiArray, queue_size = 10)
+    publisher_ping = rospy.Publisher('/sparki/ping_command', Empty, queue_size = 10)
+    publisher_servo = rospy.Publisher('/sparki/set_servo', Int16, queue_size = 10)
+    publisher_odom = rospy.Publisher('/sparki/set_odometry', Pose2D, queue_size = 10)
+    publisher_sim = rospy.Publisher('/sparki/render_sim', Empty, queue_size = 10)
+    subscriber_odometry = rospy.Subscriber("/sparki/odometry", Pose2D, queue_size = 10)
+    subscriber_state = rospy.Subscriber("/sparki/state", String, queue_size = 10)
     
+    
+    rospy.sleep(0.5)
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
-    #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
+    pose2d_sparki_odometry = Pose2D()
 
+    #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
+    rospy.loginfo(45)
+    publisher_servo.publish(45)
+    publisher_sim.publish(Empty())
+    rospy.sleep(0.5)
+    
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2d_sparki_odometry
