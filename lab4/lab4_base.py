@@ -49,7 +49,19 @@ def main():
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-	
+
+	if (ir_readings[2] < IR_THRESHOLD):
+    		publisher_motor.publish([1.0, 1.0])
+    		publisher_sim.publish(Empty())
+    		rospy.sleep(0.5)
+	elif (ir_readings[1] < IR_THRESHOLD):
+    		publisher_motor.publish([0.0, 1.0])
+    		publisher_sim.publish(Empty())
+    		rospy.sleep(0.5)
+	elif (ir_readings[3] < IR_THRESHOLD):
+    		publisher_motor.publish([1.0, 0.0])
+    		publisher_sim.publish(Empty())
+    		rospy.sleep(0.5)
 
         #TODO: Implement loop closure here
         if False:
@@ -58,10 +70,10 @@ def main():
         #TODO: Implement CYCLE TIME
 	end_time = time.time()
 	delay_time = end_time - begin_time
-	if delay_time < CYCLE_TIME:
+	if delay_time <= CYCLE_TIME:
 		rospy.sleep(CYCLE_TIME - delay_time)
 	else:
-		rospy.sleep(.1)
+	    print("Time of cycle exceeded .5 seconds")
 
 
 
@@ -94,6 +106,7 @@ def callback_update_odometry(data):
 
     #TODO: Copy this data into your local odometry variable
     pose2d_sparki_odometry = data
+    rospy.loginfo(data)
     
 
 def callback_update_state(data):
@@ -120,6 +133,7 @@ def populate_map_from_ping(x_ping, y_ping):
 
 def display_map():
     #TODO: Display the map
+    
     pass
 
 def ij_to_cell_index(i,j):
