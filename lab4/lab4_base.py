@@ -86,8 +86,8 @@ def init():
     pose2d_sparki_odometry = Pose2D()
 
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
-    rospy.loginfo(45)
-    publisher_servo.publish(45)
+    rospy.loginfo("cat")
+    publisher_servo.publish(60)
     publisher_sim.publish(Empty())
     rospy.sleep(0.5)
     
