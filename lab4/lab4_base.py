@@ -59,7 +59,7 @@ def main():
 	end_time = time.time()
 	delay_time = end_time - begin_time
 	if delay_time < CYCLE_TIME:
-		rospy.sleep(1*CYCLE_TIME - delay_time)
+		rospy.sleep(CYCLE_TIME - delay_time)
 	else:
 		rospy.sleep(.1)
 
@@ -69,24 +69,21 @@ def init():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
-    #TODO: Set up your publishers and subscribers
 
+    #TODO: Set up your publishers and subscribers
     publisher_motor = rospy.Publisher('/sparki/motor_command', Float32MultiArray, queue_size = 10)
     publisher_ping = rospy.Publisher('/sparki/ping_command', Empty, queue_size = 10)
     publisher_servo = rospy.Publisher('/sparki/set_servo', Int16, queue_size = 10)
     publisher_odom = rospy.Publisher('/sparki/set_odometry', Pose2D, queue_size = 10)
     publisher_sim = rospy.Publisher('/sparki/render_sim', Empty, queue_size = 10)
-    subscriber_odometry = rospy.Subscriber("/sparki/odometry", Pose2D, queue_size = 10)
-    subscriber_state = rospy.Subscriber("/sparki/state", String, queue_size = 10)
-    
-    
+    subscriber_odometry = rospy.Subscriber("/sparki/odometry", Pose2D, callback_update_odometry)
+    subscriber_state = rospy.Subscriber("/sparki/state", String, callback_update_state)
     rospy.sleep(0.5)
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2d_sparki_odometry = Pose2D()
 
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
-    rospy.loginfo(45)
     publisher_servo.publish(45)
     publisher_sim.publish(Empty())
     rospy.sleep(0.5)
@@ -94,11 +91,17 @@ def init():
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2d_sparki_odometry
+
     #TODO: Copy this data into your local odometry variable
+    pose2d_sparki_odometry = data
+    
 
 def callback_update_state(data):
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
     #TODO: Load data into your program's local state variables
+    ir_readings = state_dict['light_sensors']
+    publisher_servo = state_dict['servo']
+    
 
 def convert_ultrasonic_to_robot_coords(x_us):
     #TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
