@@ -9,12 +9,13 @@ from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
 #TODO: Track servo angle in radians
 servo_angle = 0;
+map_size = 10
 
 #TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0] #0 is far left, 4 is far right
  
 #TODO: Create data structure to hold map representation
-array = [[0 for i in range(10)] for j in range(10)]
+array = [[0 for i in range(map_size)] for j in range(map_size)]
 
 # TODO: Use these variables to hold your publishers and subscribers
 publisher_motor = None
@@ -96,6 +97,7 @@ def init():
     pose2d_sparki_odometry = Pose2D()
 
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
+
     publisher_servo.publish(45)
     publisher_sim.publish(Empty())
     rospy.sleep(0.5)
