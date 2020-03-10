@@ -29,7 +29,7 @@ subscriber_state = None
 
 # CONSTANTS 
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
-CYCLE_TIME = 0.1 # In seconds
+CYCLE_TIME = 0.01 # In seconds
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
@@ -46,21 +46,24 @@ def main():
 	begin_time = time.time()
   	end_time = 0
 	delay_time = 0
-	
 
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
-	msg = Float32MultiArray()
-	if (ir_readings[2] >= IR_THRESHOLD): #GO STRAIGHT
-		print("STRAIGHT")
-    		msg.data = [1.0, 1.0]
 
-	elif (ir_readings[1] < IR_THRESHOLD): #TURN LEFT
+	msg = Float32MultiArray()
+	print(ir_readings)
+	if (ir_readings[1] < IR_THRESHOLD): #TURN LEFT
+		print("LEFT")
     		msg.data = [0.0, 1.0]
 
 	elif (ir_readings[3] < IR_THRESHOLD): #TURN RIGHT
+		print("RIGHT")
     		msg.data = [1.0, 0.0]
+
+	elif (ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD): #GO STRAIGHT
+		print("STRAIGHT")
+    		msg.data = [1.0, 1.0]
 
 	publisher_motor.publish(msg)
     	publisher_sim.publish(Empty())
@@ -68,14 +71,13 @@ def main():
         #TODO: Implement loop closure here
         if pose2d_sparki_odometry == [0, 0, 0]:
       		rospy.loginfo("Loop Closure Triggered")
-		rospy.shutdown()
+		rospy.signal_shutdown()
 
 
         #TODO: Implement CYCLE TIME
 	end_time = time.time()
 	delay_time = end_time - begin_time
 	if delay_time <= CYCLE_TIME:
-	    	print(delay_time)
 		rospy.sleep(CYCLE_TIME - delay_time)
 	else:
 	    print(delay_time)
@@ -113,10 +115,10 @@ def callback_update_odometry(data):
 
     #TODO: Copy this data into your local odometry variable
     pose2d_sparki_odometry = data
-    rospy.loginfo(data)
     
 
 def callback_update_state(data):
+    global ir_readings
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
     #TODO: Load data into your program's local state variables
     ir_readings = state_dict['light_sensors']
@@ -140,6 +142,11 @@ def populate_map_from_ping(x_ping, y_ping):
 
 def display_map():
     #TODO: Display the map
+	for i in range(map_size):
+		for j in range(map_size):
+			print(map[i][j] + " ")
+		print("\n")
+
     
     pass
 
