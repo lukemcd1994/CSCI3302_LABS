@@ -17,7 +17,9 @@ sensor_reading = 0;
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
 
 # TODO: Create data structure to hold map representation
-array = [[0 for i in range(map_size)] for j in range(map_size)]
+col_size = 20
+row_size = 14
+array = [[0 for j in range(col_size)] for i in range(row_size)]
 
 # TODO: Use these variables to hold your publishers and subscribers
 publisher_motor = None
@@ -48,38 +50,38 @@ def main():
     #      To create a message for changing motor speed, use Float32MultiArray()
     #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-    msg = Float32MultiArray()
-    print(ir_readings)
-    if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
-        print("LEFT")
-        msg.data = [0.0, 1.0]
+        msg = Float32MultiArray()
+        print(ir_readings)
+        if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
+            print("LEFT")
+            msg.data = [0.0, 1.0]
 
-    elif ir_readings[3] < IR_THRESHOLD:
-        print("RIGHT")
-        msg.data = [1.0, 0.0]
+        elif ir_readings[3] < IR_THRESHOLD:
+            print("RIGHT")
+            msg.data = [1.0, 0.0]
 
-    elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
-        print("STRAIGHT")
-        msg.data = [1.0, 1.0]
+        elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
+            print("STRAIGHT")
+            msg.data = [1.0, 1.0]
 
-    publisher_motor.publish(msg)
-    publisher_sim.publish(Empty())
+        publisher_motor.publish(msg)
+        publisher_sim.publish(Empty())
 
-    # TODO: Implement loop closure here
-    if pose2d_sparki_odometry == [0, 0, 0]:
-        rospy.loginfo("Loop Closure Triggered")
-        rospy.signal_shutdown()
+        # TODO: Implement loop closure here
+        if pose2d_sparki_odometry == [0, 0, 0]:
+            rospy.loginfo("Loop Closure Triggered")
+            rospy.signal_shutdown()
 
-    convert_ultrasonic_to_robot_coords()
+        #convert_ultrasonic_to_robot_coords()
 
-    # TODO: Implement CYCLE TIME
-    end_time = time.time()
-    delay_time = end_time - begin_time
-    if delay_time <= CYCLE_TIME:
-        rospy.sleep(CYCLE_TIME - delay_time)
-    else:
-        print(delay_time)
-        print("Time of cycle exceeded .5 seconds")
+       # TODO: Implement CYCLE TIME
+        end_time = time.time()
+        delay_time = end_time - begin_time
+        if delay_time <= CYCLE_TIME:
+            rospy.sleep(CYCLE_TIME - delay_time)
+        else:
+            print(delay_time)
+            print("Time of cycle exceeded .5 seconds")
 
 
 def init():
@@ -120,10 +122,9 @@ def callback_update_odometry(data):
 def callback_update_state(data):
     global ir_readings
     state_dict = json.loads(data.data)  # Creates a dictionary object from the JSON string received from the state topic
-    # TODO: Load data into your program's local state variables
-    global ir_readings
+    # TODO: Load data into your program's local state variables]
     ir_readings = state_dict['light_sensors']
-    # publisher_servo = state_dict['servo']
+    #publisher_servo = state_dict['servo']
 
 
 def convert_ultrasonic_to_robot_coords():
@@ -146,27 +147,28 @@ def convert_robot_coords_to_world(x_r, y_r):
 
 def populate_map_from_ping(x_ping, y_ping):
     # TODO: Given world coordinates of an object detected via ping, fill in the corresponding part of the map
+    i, j = ij_to_cell_index(x_ping, y_ping)
+    array[i][j] = 1
     pass
 
 
 def display_map():
     # TODO: Display the map
-    for i in range(map_size):
-        for j in range(map_size):
+    for i in range(row_size):
+        for j in range(col_size):
             print(map[i][j] + " ")
         print("\n")
-
     pass
 
 
 def ij_to_cell_index(i, j):
     # TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
-    return 0
+    return math.floor(i/3), math.floor(j/3)
 
 
 def cell_index_to_ij(cell_index):
     # TODO: Convert from cell_index to (i,j) coordinates
-    return 0, 0
+    return cell_index[0]*3, cell_index[1]*3
 
 
 def cost(cell_index_from, cell_index_to):
