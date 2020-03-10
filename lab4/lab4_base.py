@@ -4,12 +4,14 @@ import copy
 import time
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
+import math
 
 # GLOBALS 
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
 #TODO: Track servo angle in radians
 servo_angle = 0;
 map_size = 10
+sensor_reading = 0;
 
 #TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0] #0 is far left, 4 is far right
@@ -29,7 +31,7 @@ subscriber_state = None
 
 # CONSTANTS 
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
-CYCLE_TIME = 0.1 # In seconds
+CYCLE_TIME = 0.05 # In seconds
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
@@ -44,8 +46,8 @@ def main():
     while not rospy.is_shutdown():
        # #TODO: Implement CYCLE TIME
 	begin_time = time.time()
-  	end_time = 0
-	delay_time = 0
+  	#end_time = 0
+	#delay_time = 0
 	
 
         #TODO: Implement line following code here
@@ -54,25 +56,27 @@ def main():
 	msg = Float32MultiArray()
 	if (ir_readings[2] >= IR_THRESHOLD): #GO STRAIGHT
 		print("STRAIGHT")
-    		msg.data = [1.0, 1.0]
+    	msg.data = [1.0, 1.0]
 
-	elif (ir_readings[1] < IR_THRESHOLD): #TURN LEFT
-    		msg.data = [0.0, 1.0]
+    elif ir_readings[1] < IR_THRESHOLD: #TURN LEFT
+        print("LEFT")
+        msg.data = [0.0, 1.0]
 
-	elif (ir_readings[3] < IR_THRESHOLD): #TURN RIGHT
-    		msg.data = [1.0, 0.0]
+	elif ir_readings[3] < IR_THRESHOLD: #TURN RIGHT
+    	msg.data = [1.0, 0.0]
 
-	publisher_motor.publish(msg)
+	    publisher_motor.publish(msg)
     	publisher_sim.publish(Empty())
 
         #TODO: Implement loop closure here
-        if pose2d_sparki_odometry == [0, 0, 0]:
+    if pose2d_sparki_odometry == [0, 0, 0]:
       		rospy.loginfo("Loop Closure Triggered")
 		rospy.shutdown()
 
+    convert_ultrasonic_to_robot_coords()
 
-        #TODO: Implement CYCLE TIME
-	end_time = time.time()
+    #TODO: Implement CYCLE TIME
+    end_time = time.time()
 	delay_time = end_time - begin_time
 	if delay_time <= CYCLE_TIME:
 	    	print(delay_time)
@@ -87,6 +91,7 @@ def init():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
+    global servo_angle
 
     #TODO: Set up your publishers and subscribers
     publisher_motor = rospy.Publisher('/sparki/motor_command', Float32MultiArray, queue_size = 10)
@@ -103,6 +108,7 @@ def init():
 
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
 
+    #publisher_servo.publish(int(servo_angle))
     publisher_servo.publish(45)
     publisher_sim.publish(Empty())
     rospy.sleep(0.5)
@@ -119,17 +125,23 @@ def callback_update_odometry(data):
 def callback_update_state(data):
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
     #TODO: Load data into your program's local state variables
+    global ir_readings
     ir_readings = state_dict['light_sensors']
-    publisher_servo = state_dict['servo']
+    #publisher_servo = state_dict['servo']
     
 
-def convert_ultrasonic_to_robot_coords(x_us):
+def convert_ultrasonic_to_robot_coords():
     #TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
-    x_r, y_r = 0., 0.
+    global sensor_reading, servo_angle
+    sensor_reading = state_dict['ping']
+    #servo_angle = state_dict['servo']
+    x_r, y_r = sensor_reading * math.sin(servo_angle), sensor_reading * math.cos(servo_angle)
+    print(x_r, y_r, "xr,yr readings", state_dict['servo'])
     return x_r, y_r
 
 def convert_robot_coords_to_world(x_r, y_r):
     #TODO: Using odometry, convert robot-centric coordinates into world coordinates
+    publisher_servo = state_dict['ping']
     x_w, y_w = 0., 0.
 
     return x_w, y_w
