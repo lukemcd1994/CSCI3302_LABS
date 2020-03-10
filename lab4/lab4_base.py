@@ -22,8 +22,10 @@ publisher_motor = None
 publisher_odom = None
 publisher_ping = None
 publisher_servo = None
+publisher_sim = None
 subscriber_odometry = None
 subscriber_state = None
+
 
 # CONSTANTS 
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
@@ -49,37 +51,40 @@ def main():
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
+	msg = Float32MultiArray()
+	if (ir_readings[2] >= IR_THRESHOLD): #GO STRAIGHT
+		print("STRAIGHT")
+    		msg.data = [1.0, 1.0]
 
+	elif (ir_readings[1] < IR_THRESHOLD): #TURN LEFT
+    		msg.data = [0.0, 1.0]
 
-	if (ir_readings[2] < IR_THRESHOLD):
-    		publisher_motor.publish([1.0, 1.0])
-    		publisher_sim.publish(Empty())
-    		rospy.sleep(0.5)
-	elif (ir_readings[1] < IR_THRESHOLD):
-    		publisher_motor.publish([0.0, 1.0])
-    		publisher_sim.publish(Empty())
-    		rospy.sleep(0.5)
-	elif (ir_readings[3] < IR_THRESHOLD):
-    		publisher_motor.publish([1.0, 0.0])
-    		publisher_sim.publish(Empty())
-    		rospy.sleep(0.5)
+	elif (ir_readings[3] < IR_THRESHOLD): #TURN RIGHT
+    		msg.data = [1.0, 0.0]
+
+	publisher_motor.publish(msg)
+    	publisher_sim.publish(Empty())
 
         #TODO: Implement loop closure here
-        if False:
-            rospy.loginfo("Loop Closure Triggered")
+        if pose2d_sparki_odometry == [0, 0, 0]:
+      		rospy.loginfo("Loop Closure Triggered")
+		rospy.shutdown()
+
 
         #TODO: Implement CYCLE TIME
 	end_time = time.time()
 	delay_time = end_time - begin_time
 	if delay_time <= CYCLE_TIME:
+	    	print(delay_time)
 		rospy.sleep(CYCLE_TIME - delay_time)
 	else:
+	    print(delay_time)
 	    print("Time of cycle exceeded .5 seconds")
 
 
 
 def init():
-    global publisher_motor, publisher_ping, publisher_servo, publisher_odom
+    global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
 
