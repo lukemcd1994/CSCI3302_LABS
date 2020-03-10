@@ -5,8 +5,9 @@ import time
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 import math
+import curses
 
-# GLOBALS 
+# GLOBALS
 pose2d_sparki_odometry = None  # Pose2D message object, contains x,y,theta members in meters and radians
 # TODO: Track servo angle in radians
 servo_angle = 0;
@@ -20,6 +21,9 @@ ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
 col_size = 20
 row_size = 14
 array = [[0 for j in range(col_size)] for i in range(row_size)]
+
+screen = curses.initscr()
+
 
 # TODO: Use these variables to hold your publishers and subscribers
 publisher_motor = None
@@ -51,17 +55,17 @@ def main():
     #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
         msg = Float32MultiArray()
-        print(ir_readings)
+        # print(ir_readings)
         if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
-            print("LEFT")
+            # print("LEFT")
             msg.data = [0.0, 1.0]
 
         elif ir_readings[3] < IR_THRESHOLD:
-            print("RIGHT")
+            # print("RIGHT")
             msg.data = [1.0, 0.0]
 
         elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
-            print("STRAIGHT")
+            # print("STRAIGHT")
             msg.data = [1.0, 1.0]
 
         publisher_motor.publish(msg)
@@ -83,6 +87,10 @@ def main():
             print(delay_time)
             print("Time of cycle exceeded .5 seconds")
 
+        display_map()
+        screen.refresh()
+
+    curses.endwin()
 
 def init():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
@@ -156,10 +164,14 @@ def display_map():
     # TODO: Display the map
     for i in range(row_size):
         for j in range(col_size):
-            print(map[i][j] + " ")
-        print("\n")
-    pass
+            row_index = i*2
+            col_index = j*2
+            screen.addstr(row_index,col_index,str(array[i][j]))
+            # screen.addstr(i,j,str(array[i][j]))
 
+        # print("\n")
+    # screen.addstr(0, 0, )
+    # screen.addch(5, 5, "Y")
 
 def ij_to_cell_index(i, j):
     # TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
