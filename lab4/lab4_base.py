@@ -46,32 +46,32 @@ def main():
     while not rospy.is_shutdown():
        # #TODO: Implement CYCLE TIME
 	begin_time = time.time()
-  	#end_time = 0
-	#delay_time = 0
-	
 
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
+
 	msg = Float32MultiArray()
-	if (ir_readings[2] >= IR_THRESHOLD): #GO STRAIGHT
+	print(ir_readings)
+	if (ir_readings[1] < IR_THRESHOLD): #TURN LEFT
+		print("LEFT")
+    		msg.data = [0.0, 1.0]
+
+	elif (ir_readings[3] < IR_THRESHOLD): #TURN RIGHT
+		print("RIGHT")
+    		msg.data = [1.0, 0.0]
+
+	elif (ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD): #GO STRAIGHT
 		print("STRAIGHT")
-    	msg.data = [1.0, 1.0]
+    		msg.data = [1.0, 1.0]
 
-    elif ir_readings[1] < IR_THRESHOLD: #TURN LEFT
-        print("LEFT")
-        msg.data = [0.0, 1.0]
-
-	elif ir_readings[3] < IR_THRESHOLD: #TURN RIGHT
-    	msg.data = [1.0, 0.0]
-
-	    publisher_motor.publish(msg)
+	publisher_motor.publish(msg)
     	publisher_sim.publish(Empty())
 
         #TODO: Implement loop closure here
     if pose2d_sparki_odometry == [0, 0, 0]:
       		rospy.loginfo("Loop Closure Triggered")
-		rospy.shutdown()
+		rospy.signal_shutdown()
 
     convert_ultrasonic_to_robot_coords()
 
@@ -79,7 +79,6 @@ def main():
     end_time = time.time()
 	delay_time = end_time - begin_time
 	if delay_time <= CYCLE_TIME:
-	    	print(delay_time)
 		rospy.sleep(CYCLE_TIME - delay_time)
 	else:
 	    print(delay_time)
@@ -119,10 +118,10 @@ def callback_update_odometry(data):
 
     #TODO: Copy this data into your local odometry variable
     pose2d_sparki_odometry = data
-    rospy.loginfo(data)
     
 
 def callback_update_state(data):
+    global ir_readings
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
     #TODO: Load data into your program's local state variables
     global ir_readings
@@ -152,6 +151,11 @@ def populate_map_from_ping(x_ping, y_ping):
 
 def display_map():
     #TODO: Display the map
+	for i in range(map_size):
+		for j in range(map_size):
+			print(map[i][j] + " ")
+		print("\n")
+
     
     pass
 
