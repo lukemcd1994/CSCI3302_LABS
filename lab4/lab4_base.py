@@ -9,7 +9,7 @@ import math
 # GLOBALS 
 pose2d_sparki_odometry = None  # Pose2D message object, contains x,y,theta members in meters and radians
 # TODO: Track servo angle in radians
-servo_angle = 0
+servo_angle = 60
 map_size = 10
 sensor_reading = 0
 state_dict = {}
@@ -81,7 +81,7 @@ def main():
 
         convert_robot_coords_to_world()
         populate_map_from_ping()
-
+        display_map()
         # TODO: Implement CYCLE TIME
 
         end_time = time.time()
@@ -144,7 +144,7 @@ def convert_ultrasonic_to_robot_coords():
     if 'ping' in state_dict:
         sensor_reading = state_dict['ping']
         x_r, y_r = sensor_reading * math.sin(servo_angle), sensor_reading * math.cos(servo_angle)
-        print(x_r, y_r, "xr,yr readings", sensor_reading)
+        #print(x_r, y_r, "xr,yr readings", sensor_reading)
         #return x_r, y_r
         return sensor_reading
 
@@ -177,16 +177,18 @@ def populate_map_from_ping():
     #populate map with x_ping, y_ping
     if x_ping > 0 and y_ping > 0:
         global col_size, row_size, array
-        array[int(max_y/y_ping*row_size)][int(max_x/x_ping*col_size)] = 1
+        i,j = int(y_ping/max_y*row_size), int(x_ping/max_x*col_size)
+        #print("i,j", i, j)
+        array[i][j] = 1
 
 
 def display_map():
     # TODO: Display the map
-    for i in range(row_size):
+    for i in reversed(range(row_size)):
         for j in range(col_size):
-            print(map[i][j] + " ")
-        print("\n")
-    pass
+            print array[i][j] ,
+
+        print("")
 
 
 def ij_to_cell_index(i, j):
