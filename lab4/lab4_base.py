@@ -37,13 +37,11 @@ subscriber_state = None
 IR_THRESHOLD = 300  # IR sensor threshold for detecting black track. Change as necessary.
 CYCLE_TIME = 0.05  # In seconds
 
-float to_radians(double deg) {
-  return  deg * 3.1415/180.;
-}
+def to_radians( deg):
+  return  deg * 3.1415/180.
 
-float to_degrees(double rad) {
-  return  rad * 180/3.1415;
-}
+def to_degrees( rad):
+  return  rad * 180/3.1415
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
