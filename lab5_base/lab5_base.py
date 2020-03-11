@@ -193,6 +193,16 @@ def render_map(map_array):
     Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
     (To do this, you'll probably want to iterate from row 'J-1' to '0')
   '''
+  i = len(map_array) - 1
+  while( i >= 0 ):
+     row = ""
+     for j in range(len(map_array[0])):
+        if map_array[i][j] == 0:
+           row += ' . '
+        else:
+           row += '[ ]' 
+     print(row)
+     i -= 1
 
 
 def part_1():
@@ -202,6 +212,7 @@ def part_1():
   grid_map = create_test_map(g_WORLD_MAP)
 
   # Use render_map to render your initialized obstacle map
+  print(grid_map)
   render_map(grid_map)
   
   # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
@@ -215,8 +226,8 @@ def part_1():
   '''
 
   #m = create_test_map(g_WORLD_MAP)
-  m = _load_img_to_intensity_matrix("obstacle_test1.png")
-  render_map(m)
+  m = _load_img_to_intensity_matrix("obstacles_test1.png")
+
 
 
   #_load_img_to_intensity_matrix(img_filename)
