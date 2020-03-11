@@ -301,13 +301,13 @@ def cost(cell_index_from, cell_index_to):
                     m[i][j] = min([m[x][y] + 1 for x, y in neighbor])
 
                     #check if there is better path for neighbor
-                    if i > 0 and m[i - 1][j] > val + 1:
+                    if i > 0 and m[i - 1][j] > val + 1 and m[i - 1][j] < 999:
                         m[i - 1][j] = val + 1
-                    if j > 0 and m[i][j - 1] > val + 1:
+                    if j > 0 and m[i][j - 1] > val + 1 and m[i][j - 1] < 999:
                         m[i][j - 1] = val + 1
-                    if i < row_size - 1 and m[i + 1][j] > val + 1:
+                    if i < row_size - 1 and m[i + 1][j] > val + 1 and m[i + 1][j] < 999:
                         m[i + 1][j] = val + 1
-                    if j < col_size - 1 and m[i][j + 1] > val + 1:
+                    if j < col_size - 1 and m[i][j + 1] > val + 1 and m[i][j + 1] < 999:
                         m[i][j + 1] = val + 1
 
                     for coord in neighbor:
