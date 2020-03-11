@@ -22,7 +22,7 @@ col_size = 20
 row_size = 14
 array = [[0 for j in range(col_size)] for i in range(row_size)]
 
-screen = curses.initscr()
+# screen = curses.initscr()
 
 
 # TODO: Use these variables to hold your publishers and subscribers
@@ -49,13 +49,13 @@ def main():
 
     while not rospy.is_shutdown():  # TODO: Implement CYCLE TIME
         begin_time = time.time()
-
+        publisher_ping.publish(Empty())
+        convert_ultrasonic_to_robot_coords()
     # TODO: Implement line following code here
     #      To create a message for changing motor speed, use Float32MultiArray()
     #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
         msg = Float32MultiArray()
-        # print(ir_readings)
         if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
             # print("LEFT")
             msg.data = [0.0, 1.0]
@@ -88,9 +88,9 @@ def main():
             print("Time of cycle exceeded .5 seconds")
 
         display_map()
-        screen.refresh()
+        # screen.refresh()
 
-    curses.endwin()
+    # curses.endwin()
 
 def init():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
@@ -128,20 +128,30 @@ def callback_update_odometry(data):
 
 
 def callback_update_state(data):
-    global ir_readings
+    global ir_readings,sensor_reading,servo_angle
     state_dict = json.loads(data.data)  # Creates a dictionary object from the JSON string received from the state topic
     # TODO: Load data into your program's local state variables]
     ir_readings = state_dict['light_sensors']
+    if state_dict.get('ping'):
+        sensor_reading = state_dict['ping']
+    else:
+        sensor_reading = None
+    print(sensor_reading)
+    servo_angle = state_dict['servo']
+    print(servo_angle)
+    # printable = ' '.join([str(elem) for elem in ir_readings])
+    # screen.addstr(row_size + 10,col_size, str(printable))
     #publisher_servo = state_dict['servo']
 
 
 def convert_ultrasonic_to_robot_coords():
     # TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
-    global sensor_reading, servo_angle
-    sensor_reading = state_dict['ping']
-    # servo_angle = state_dict['servo']
+    global sensor_reading
+    # sensor_reading = state_dict['ping']
+    if not sensor_reading:
+        return None,None
     x_r, y_r = sensor_reading * math.sin(servo_angle), sensor_reading * math.cos(servo_angle)
-    print(x_r, y_r, "xr,yr readings", state_dict['servo'])
+    # print(x_r, y_r, "xr,yr readings", state_dict['servo'])
     return x_r, y_r
 
 
@@ -164,14 +174,10 @@ def display_map():
     # TODO: Display the map
     for i in range(row_size):
         for j in range(col_size):
-            row_index = i*2
+            row_index = i
             col_index = j*2
-            screen.addstr(row_index,col_index,str(array[i][j]))
-            # screen.addstr(i,j,str(array[i][j]))
+            # screen.addstr(row_index,col_index,str(array[i][j]))
 
-        # print("\n")
-    # screen.addstr(0, 0, )
-    # screen.addch(5, 5, "Y")
 
 def ij_to_cell_index(i, j):
     # TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
