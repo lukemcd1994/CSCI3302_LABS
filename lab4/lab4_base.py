@@ -13,8 +13,8 @@ servo_angle = 60
 map_size = 10
 sensor_reading = 0
 state_dict = {}
-max_x = 1.7209
-max_y = 1.1211
+max_x = 1.721
+max_y = 1.122
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
@@ -37,6 +37,13 @@ subscriber_state = None
 IR_THRESHOLD = 300  # IR sensor threshold for detecting black track. Change as necessary.
 CYCLE_TIME = 0.05  # In seconds
 
+float to_radians(double deg) {
+  return  deg * 3.1415/180.;
+}
+
+float to_degrees(double rad) {
+  return  rad * 180/3.1415;
+}
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
@@ -141,9 +148,11 @@ def convert_ultrasonic_to_robot_coords():
     # Make things way easier if return sensor_reading
     global sensor_reading, servo_angle, state_dict
 
+    sar = to_radians(servo_angle)
+
     if 'ping' in state_dict:
         sensor_reading = state_dict['ping']
-        x_r, y_r = sensor_reading * math.sin(servo_angle), sensor_reading * math.cos(servo_angle)
+        x_r, y_r = sensor_reading * math.sin(sar), sensor_reading * math.cos(sar)
         #print(x_r, y_r, "xr,yr readings", sensor_reading)
         #return x_r, y_r
         return sensor_reading
@@ -154,6 +163,8 @@ def convert_ultrasonic_to_robot_coords():
 def convert_robot_coords_to_world():
     # TODO: Using odometry, convert robot-centric coordinates into world coordinates
     x_w, y_w = 0,0
+
+    sar = to_radians(servo_angle)
 
     global pose2d_sparki_odometry
     if pose2d_sparki_odometry != None:
@@ -171,7 +182,7 @@ def populate_map_from_ping():
 
     if pose2d_sparki_odometry != None and sensor_reading > 0:
         x, y, t = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta
-        x_ping, y_ping = x + sensor_reading*math.sin(servo_angle+t),y+sensor_reading * math.cos(servo_angle + t)
+        x_ping, y_ping = x + sensor_reading*math.sin(sar+t),y+sensor_reading * math.cos(sar + t)
 
 
     #populate map with x_ping, y_ping
