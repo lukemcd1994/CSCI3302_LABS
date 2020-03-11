@@ -13,15 +13,15 @@ servo_angle = 60
 map_size = 10
 sensor_reading = 0
 state_dict = {}
-max_x = 1.72
-max_y = 1.12
+max_x, max_y = 1.72, 1.12
+starting_x, starting_y = 0, 0
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
 
 # TODO: Create data structure to hold map representation
-col_size = 20
-row_size = 14
+col_size = 48
+row_size = 32
 array = [[0 for j in range(col_size)] for i in range(row_size)]
 
 # TODO: Use these variables to hold your publishers and subscribers
@@ -47,7 +47,7 @@ def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
-
+    global starting_x, starting_y
 
     # TODO: Init your node to register it with the ROS core
     rospy.init_node('obstaclefinder', anonymous=True)
@@ -80,13 +80,17 @@ def main():
         #publisher_odom.publish(Empty())
 
         # TODO: Implement loop closure here
-        if pose2d_sparki_odometry == [-1, 0, 0]:
+        x,y = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
+        print("sxsy", starting_x, starting_y, x,y)
+
+        if abs(y-starting_y) < 0.02 and x < starting_x and abs(x-starting_x) < 0.02:
             rospy.loginfo("Loop Closure Triggered")
-            rospy.signal_shutdown()
+            rospy.signal_shutdown("Complete")
 
         convert_robot_coords_to_world()
         populate_map_from_ping()
         display_map()
+        cost(0, 1200)
         # TODO: Implement CYCLE TIME
 
         end_time = time.time()
@@ -102,7 +106,7 @@ def init():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
-    global servo_angle
+    global servo_angle, starting_x, starting_y
 
     # TODO: Set up your publishers and subscribers
     publisher_motor = rospy.Publisher('/sparki/motor_command', Float32MultiArray, queue_size=10)
@@ -120,9 +124,9 @@ def init():
     # TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
 
     publisher_servo.publish(int(servo_angle))
-    #publisher_servo.publish(45)
     publisher_sim.publish(Empty())
     rospy.sleep(0.5)
+    starting_x, starting_y = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
 
 
 def callback_update_odometry(data):
@@ -151,7 +155,7 @@ def convert_ultrasonic_to_robot_coords():
     if 'ping' in state_dict:
         sensor_reading = state_dict['ping']
         x_r, y_r = sensor_reading * math.cos(sar), sensor_reading * math.sin(sar)
-        #print(x_r, y_r, "xr,yr readings", sensor_reading)
+        print("x_r,y_r, ping_reading:",x_r, y_r, sensor_reading)
         #return x_r, y_r
         return sensor_reading
 
@@ -165,7 +169,7 @@ def convert_robot_coords_to_world():
     global pose2d_sparki_odometry
     if pose2d_sparki_odometry != None:
         x_w, y_w = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
-    print(x_w, y_w, "world coord")
+    #print(x_w, y_w, "world coord")
     return x_w, y_w
 
 def populate_map_from_ping():
@@ -185,42 +189,54 @@ def populate_map_from_ping():
     if x_ping > 0 and y_ping > 0:
         global col_size, row_size, array
 
-        x_ping, y_ping = x_ping/col_size*(col_size-1), y_ping/row_size*(row_size-1)
+        #x_ping, y_ping = x_ping/col_size*(col_size-1), y_ping/row_size*(row_size-1)
         i,j = int(y_ping/max_y*row_size), int(x_ping/max_x*col_size)
-        if i >= row_size:
-            i = row_size-1
-        if i < 0:
-            i = 0
-        if j >= col_size:
-            j = col_size-1
-        if j < 0:
-            j = 0
-        print("i,j", i, j)
+        # if i >= row_size:
+        #     i = row_size-1
+        # if i < 0:
+        #     i = 0
+        # if j >= col_size:
+        #     j = col_size-1
+        # if j < 0:
+        #     j = 0
+        # print("i,j", i, j)
         array[i][j] = 1
 
 
 def display_map():
     # TODO: Display the map
+    global pose2d_sparki_odometry
+    #robot location x,y
+    x, y = int(pose2d_sparki_odometry.y / max_y * row_size), int(pose2d_sparki_odometry.x / max_x * col_size)
+    symbol = ["_", "X"]
     for i in reversed(range(row_size)):
         for j in range(col_size):
-            print array[i][j] ,
+            if i == x and j == y:
+                print "R" ,
+            else:
+                print symbol[array[i][j]] ,
 
         print("")
 
 
 def ij_to_cell_index(i, j):
     # TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
-    return math.floor(i/3), math.floor(j/3)
+    #cell index starts from 0 to row*col-1
+    return j*row_size+i
 
 
 def cell_index_to_ij(cell_index):
     # TODO: Convert from cell_index to (i,j) coordinates
-    return cell_index[0]*3, cell_index[1]*3
+    return cell_index%row_size, int(cell_index/row_size)
 
 
 def cost(cell_index_from, cell_index_to):
     # TODO: Return cost of traversing from one cell to another
-    return 0
+    x1,y1 = cell_index_to_ij(cell_index_from)
+    x2,y2 = cell_index_to_ij(cell_index_to)
+
+    #print cell_index_from, cell_index_to, x1-y1+x2-y2
+    return x1-y1+x2-y2
 
 
 if __name__ == "__main__":
