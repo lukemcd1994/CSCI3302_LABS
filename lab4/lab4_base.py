@@ -39,7 +39,7 @@ subscriber_state = None
 
 # CONSTANTS
 IR_THRESHOLD = 300  # IR sensor threshold for detecting black track. Change as necessary.
-CYCLE_TIME = 0.05  # In seconds
+CYCLE_TIME = 0.01  # In seconds
 
 def to_radians( deg):
   return  deg * 3.14159/180.
@@ -59,7 +59,7 @@ def main():
 
     while not rospy.is_shutdown():  # TODO: Implement CYCLE TIME
         begin_time = time.time()
-
+        #print("")
         # TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
@@ -67,15 +67,15 @@ def main():
         msg = Float32MultiArray()
         #print(ir_readings)
         if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
-            print("RIGHT")
+            #print("RIGHT")
             msg.data = [0.0, 1.0]
 
         elif ir_readings[3] < IR_THRESHOLD:
-            print("LEFT")
+            #print("LEFT")
             msg.data = [1.0, 0.0]
 
         elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
-            print("STRAIGHT")
+            #print("STRAIGHT")
             msg.data = [1.0, 1.0]
 
         publisher_motor.publish(msg)
@@ -88,34 +88,37 @@ def main():
         #print("sxsy", starting_x, starting_y, x,y)
 
         if abs(y-starting_y) < 0.02 and x < starting_x and abs(x-starting_x) < 0.02:
-            publisher_motor.publish([0,0])
+            #turn off motor before exiting
+            msg.data = [0.0, 0.0]
+            publisher_motor.publish(msg)
             rospy.loginfo("Loop Closure Triggered")
             rospy.signal_shutdown("Complete")
 
         convert_robot_coords_to_world()
         populate_map_from_ping()
-        display_map()
 
-        #printing cost from 0,0 to 30,40, recount every 1000 loop to avoid lagging
-        i_from, i_to = ij_to_cell_index(y_from,x_from), ij_to_cell_index(y_to,x_to)
-        if cycle_count%1000 == 1:
+        # printing info, count cost every 200 loops to avoid lagging
+        i_from, i_to = ij_to_cell_index(y_from, x_from), ij_to_cell_index(y_to, x_to)
+        if cycle_count % 200 == 1:
             cost_ij = cost(i_from, i_to)
-        print ("cost from ",i_from," to ",i_to," is: ", cost_ij)
-        print ("next update in ", 1000-cycle_count%1000, " cycles")
+            display_map()
+            print "cost from index {0} to {1} is: {2}".format(i_from, i_to, cost(i_from, i_to))
+
         cycle_count += 1
+
 
         # TODO: Implement CYCLE TIME
         end_time = time.time()
         delay_time = end_time - begin_time
+        #print(end_time - begin_time)
         if delay_time <= CYCLE_TIME:
             rospy.sleep(CYCLE_TIME - delay_time)
         else:
-            print(delay_time)
-            print("Time of cycle exceeded .02 seconds")
+            print("Cycle time exceeded: ", delay_time)
 
     #final message
     i_from, i_to = ij_to_cell_index(y_from,x_from), ij_to_cell_index(y_to,x_to)
-    print ("Final cost from ", i_from, " to ", i_to, " is: ", cost(i_from, i_to))
+    print "Final cost from index {0} to {1} is: {2}".format(i_from, i_to, cost(i_from, i_to))
 
 
 def init():
@@ -164,14 +167,15 @@ def callback_update_state(data):
 def convert_ultrasonic_to_robot_coords():
     # TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
     # Make things way easier if return sensor_reading
-    global sensor_reading, servo_angle, state_dict
+    global sensor_reading, servo_angle, state_dict, cycle_count
 
     sar = to_radians(servo_angle)
 
     if 'ping' in state_dict:
         sensor_reading = state_dict['ping']
         x_r, y_r = sensor_reading * math.cos(sar), sensor_reading * math.sin(sar)
-        print("x_r,y_r, ping_reading:",x_r, y_r, sensor_reading)
+        if cycle_count%200 == 2:
+            print("x_r,y_r, ping_reading:",x_r, y_r, sensor_reading)
         #return x_r, y_r
         return sensor_reading
 
@@ -232,12 +236,14 @@ def display_map():
 def ij_to_cell_index(i, j):
     # TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
     #cell index starts from 0 to row*col-1
-    return j*row_size+i
+    global col_size
+    return i*col_size+j
 
 
 def cell_index_to_ij(cell_index):
     # TODO: Convert from cell_index to (i,j) coordinates
-    return cell_index%row_size, int(cell_index/row_size)
+    global col_size
+    return int(cell_index/col_size), cell_index%col_size
 
 
 def cost(cell_index_from, cell_index_to):
@@ -285,26 +291,30 @@ def cost(cell_index_from, cell_index_to):
                 visited.append([i, j])
                 if m[i][j] < 1000:
                     neighbor = [[i,j]]
-                    neighbor_d = []
-                    if i > 0:
-                        neighbor.append([i-1, j])
-                        if j>0: neighbor_d.append([i-1, j-1])
-                        if j < col_size - 1: neighbor_d.append([i-1, j+1])
+                    val = m[i][j]
+                    if i > 0: neighbor.append([i-1, j])
                     if j > 0: neighbor.append([i, j-1])
-                    if i < row_size-1:
-                        neighbor.append([i + 1, j])
-                        if j>0: neighbor_d.append([i+1, j-1])
-                        if j < col_size - 1: neighbor_d.append([i+1, j+1])
+                    if i < row_size-1: neighbor.append([i + 1, j])
                     if j < col_size-1: neighbor.append([i , j+1])
 
-                    m[i][j] = min([m[x][y]+1 for x,y in neighbor]+[m[x][y]+1.4 for x,y in neighbor_d])
+                    #find best cost among neighbors
+                    m[i][j] = min([m[x][y] + 1 for x, y in neighbor])
 
-                    for coord in neighbor+neighbor_d:
+                    #check if there is better path for neighbor
+                    if i > 0 and m[i - 1][j] > val + 1:
+                        m[i - 1][j] = val + 1
+                    if j > 0 and m[i][j - 1] > val + 1:
+                        m[i][j - 1] = val + 1
+                    if i < row_size - 1 and m[i + 1][j] > val + 1:
+                        m[i + 1][j] = val + 1
+                    if j < col_size - 1 and m[i][j + 1] > val + 1:
+                        m[i][j + 1] = val + 1
+
+                    for coord in neighbor:
                         if coord not in visited:
                             new_queue.append(coord)
 
         queue = new_queue
-        #print(queue)
 
     #no path found if queue never reach x2, y2
     if m[x2][y2] == 999:
