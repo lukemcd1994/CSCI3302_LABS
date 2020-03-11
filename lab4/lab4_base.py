@@ -15,13 +15,17 @@ sensor_reading = 0
 state_dict = {}
 max_x, max_y = 1.72, 1.12
 starting_x, starting_y = 0, 0
+cycle_count, cost_ij = 0, 0
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
 
 # TODO: Create data structure to hold map representation
-col_size = 48
-row_size = 32
+col_size = 36
+row_size = 24
+
+# INPUT FOR COST FUNCTION
+x_from, y_from, x_to, y_to = 26,2,28,22
 array = [[0 for j in range(col_size)] for i in range(row_size)]
 
 # TODO: Use these variables to hold your publishers and subscribers
@@ -38,16 +42,16 @@ IR_THRESHOLD = 300  # IR sensor threshold for detecting black track. Change as n
 CYCLE_TIME = 0.05  # In seconds
 
 def to_radians( deg):
-  return  deg * 3.1415/180.
+  return  deg * 3.14159/180.
 
 def to_degrees( rad):
-  return  rad * 180/3.1415
+  return  rad * 180/3.14159
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
-    global starting_x, starting_y
+    global starting_x, starting_y, cycle_count, cost_ij, x_from, y_from, x_to, y_to
 
     # TODO: Init your node to register it with the ROS core
     rospy.init_node('obstaclefinder', anonymous=True)
@@ -61,7 +65,7 @@ def main():
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
         msg = Float32MultiArray()
-        print(ir_readings)
+        #print(ir_readings)
         if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
             print("RIGHT")
             msg.data = [0.0, 1.0]
@@ -81,25 +85,37 @@ def main():
 
         # TODO: Implement loop closure here
         x,y = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
-        print("sxsy", starting_x, starting_y, x,y)
+        #print("sxsy", starting_x, starting_y, x,y)
 
         if abs(y-starting_y) < 0.02 and x < starting_x and abs(x-starting_x) < 0.02:
+            publisher_motor.publish([0,0])
             rospy.loginfo("Loop Closure Triggered")
             rospy.signal_shutdown("Complete")
 
         convert_robot_coords_to_world()
         populate_map_from_ping()
         display_map()
-        cost(0, 1200)
-        # TODO: Implement CYCLE TIME
 
+        #printing cost from 0,0 to 30,40, recount every 1000 loop to avoid lagging
+        i_from, i_to = ij_to_cell_index(y_from,x_from), ij_to_cell_index(y_to,x_to)
+        if cycle_count%1000 == 1:
+            cost_ij = cost(i_from, i_to)
+        print ("cost from ",i_from," to ",i_to," is: ", cost_ij)
+        print ("next update in ", 1000-cycle_count%1000, " cycles")
+        cycle_count += 1
+
+        # TODO: Implement CYCLE TIME
         end_time = time.time()
         delay_time = end_time - begin_time
         if delay_time <= CYCLE_TIME:
             rospy.sleep(CYCLE_TIME - delay_time)
         else:
             print(delay_time)
-            print("Time of cycle exceeded .5 seconds")
+            print("Time of cycle exceeded .02 seconds")
+
+    #final message
+    i_from, i_to = ij_to_cell_index(y_from,x_from), ij_to_cell_index(y_to,x_to)
+    print ("Final cost from ", i_from, " to ", i_to, " is: ", cost(i_from, i_to))
 
 
 def init():
@@ -191,15 +207,6 @@ def populate_map_from_ping():
 
         #x_ping, y_ping = x_ping/col_size*(col_size-1), y_ping/row_size*(row_size-1)
         i,j = int(y_ping/max_y*row_size), int(x_ping/max_x*col_size)
-        # if i >= row_size:
-        #     i = row_size-1
-        # if i < 0:
-        #     i = 0
-        # if j >= col_size:
-        #     j = col_size-1
-        # if j < 0:
-        #     j = 0
-        # print("i,j", i, j)
         array[i][j] = 1
 
 
@@ -213,9 +220,12 @@ def display_map():
         for j in range(col_size):
             if i == x and j == y:
                 print "R" ,
+            elif i == y_from and j == x_from:
+                print "S" ,
+            elif i == y_to and j == x_to:
+                print "T" ,
             else:
                 print symbol[array[i][j]] ,
-
         print("")
 
 
@@ -232,12 +242,74 @@ def cell_index_to_ij(cell_index):
 
 def cost(cell_index_from, cell_index_to):
     # TODO: Return cost of traversing from one cell to another
+    global array
+    m = copy.deepcopy(array)
+    for i, row in enumerate(m):
+        for j, col in enumerate(row):
+            if col == 1:
+                m[i][j] = 9999
+            if col == 0:
+                m[i][j] = 999
     x1,y1 = cell_index_to_ij(cell_index_from)
     x2,y2 = cell_index_to_ij(cell_index_to)
 
-    #print cell_index_from, cell_index_to, x1-y1+x2-y2
-    return x1-y1+x2-y2
+    #check if from/to valid
+    try:
+        if m[x1][y1] > 1000:
+            print("Starting index on a wall")
+            return 0
+    except:
+        print("Starting index out of bound")
+        return 0
+    try:
+        if m[x2][y2] > 1000:
+            print("Target index on a wall")
+            return 0
+    except:
+        print("Target index out of bound")
+        return 0
 
+    #start of magic algorithm
+    queue = [[x1,y1]]
+    visited = []
+
+    #cost of starting coord will be 0
+    m[x1][y1] = -1
+
+    while len(queue) > 0:
+        new_queue = []
+
+        for i,j in queue:
+            #if in visited or wall do nothing, else run main algorithm
+            if [i,j] not in visited:
+                visited.append([i, j])
+                if m[i][j] < 1000:
+                    neighbor = [[i,j]]
+                    neighbor_d = []
+                    if i > 0:
+                        neighbor.append([i-1, j])
+                        if j>0: neighbor_d.append([i-1, j-1])
+                        if j < col_size - 1: neighbor_d.append([i-1, j+1])
+                    if j > 0: neighbor.append([i, j-1])
+                    if i < row_size-1:
+                        neighbor.append([i + 1, j])
+                        if j>0: neighbor_d.append([i+1, j-1])
+                        if j < col_size - 1: neighbor_d.append([i+1, j+1])
+                    if j < col_size-1: neighbor.append([i , j+1])
+
+                    m[i][j] = min([m[x][y]+1 for x,y in neighbor]+[m[x][y]+1.4 for x,y in neighbor_d])
+
+                    for coord in neighbor+neighbor_d:
+                        if coord not in visited:
+                            new_queue.append(coord)
+
+        queue = new_queue
+        #print(queue)
+
+    #no path found if queue never reach x2, y2
+    if m[x2][y2] == 999:
+        print("no path found")
+    return m[x2][y2]
 
 if __name__ == "__main__":
     main()
