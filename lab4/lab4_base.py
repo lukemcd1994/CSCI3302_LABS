@@ -13,8 +13,8 @@ servo_angle = 60
 map_size = 10
 sensor_reading = 0
 state_dict = {}
-max_x = 1.721
-max_y = 1.122
+max_x = 1.75
+max_y = 1.15
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
@@ -184,11 +184,16 @@ def populate_map_from_ping():
     #populate map with x_ping, y_ping
     if x_ping > 0 and y_ping > 0:
         global col_size, row_size, array
+        x_ping, y_ping = x_ping/col_size*(col_size-1), y_ping/row_size*(row_size-1)
         i,j = int(y_ping/max_y*row_size), int(x_ping/max_x*col_size)
         if i >= row_size:
             i = row_size-1
+        if i < 0:
+            i = 0
         if j >= col_size:
             j = col_size-1
+        if j < 0:
+            j = 0
         print("i,j", i, j)
         array[i][j] = 1
 
