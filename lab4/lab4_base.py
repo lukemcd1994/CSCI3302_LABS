@@ -162,8 +162,6 @@ def convert_robot_coords_to_world():
     # TODO: Using odometry, convert robot-centric coordinates into world coordinates
     x_w, y_w = 0,0
 
-    sar = to_radians(servo_angle)
-
     global pose2d_sparki_odometry
     if pose2d_sparki_odometry != None:
         x_w, y_w = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
@@ -177,7 +175,7 @@ def populate_map_from_ping():
 
     sensor_reading = convert_ultrasonic_to_robot_coords()
     x_ping, y_ping = 0, 0
-
+    sar = to_radians(servo_angle)
     if pose2d_sparki_odometry != None and sensor_reading > 0:
         x, y, t = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta
         x_ping, y_ping = x + sensor_reading*math.sin(sar+t),y+sensor_reading * math.cos(sar + t)
