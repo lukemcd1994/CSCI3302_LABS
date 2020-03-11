@@ -150,7 +150,7 @@ def convert_ultrasonic_to_robot_coords():
 
     if 'ping' in state_dict:
         sensor_reading = state_dict['ping']
-        x_r, y_r = sensor_reading * math.sin(sar), sensor_reading * math.cos(sar)
+        x_r, y_r = sensor_reading * math.cos(sar), sensor_reading * math.sin(sar)
         #print(x_r, y_r, "xr,yr readings", sensor_reading)
         #return x_r, y_r
         return sensor_reading
@@ -178,12 +178,13 @@ def populate_map_from_ping():
     sar = to_radians(servo_angle)
     if pose2d_sparki_odometry != None and sensor_reading > 0:
         x, y, t = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta
-        x_ping, y_ping = x + sensor_reading*math.sin(sar+t),y+sensor_reading * math.cos(sar + t)
+        x_ping, y_ping = x + sensor_reading*math.cos(sar+t),y+sensor_reading * math.sin(sar + t)
 
 
     #populate map with x_ping, y_ping
     if x_ping > 0 and y_ping > 0:
         global col_size, row_size, array
+
         x_ping, y_ping = x_ping/col_size*(col_size-1), y_ping/row_size*(row_size-1)
         i,j = int(y_ping/max_y*row_size), int(x_ping/max_x*col_size)
         if i >= row_size:
