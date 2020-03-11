@@ -9,9 +9,10 @@ import math
 # GLOBALS 
 pose2d_sparki_odometry = None  # Pose2D message object, contains x,y,theta members in meters and radians
 # TODO: Track servo angle in radians
-servo_angle = 0;
+servo_angle = 0
 map_size = 10
-sensor_reading = 0;
+sensor_reading = 0
+state_dict = {}
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
@@ -37,6 +38,8 @@ def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
+
+
     # TODO: Init your node to register it with the ROS core
     rospy.init_node('obstaclefinder', anonymous=True)
     init()
@@ -44,42 +47,45 @@ def main():
     while not rospy.is_shutdown():  # TODO: Implement CYCLE TIME
         begin_time = time.time()
 
-    # TODO: Implement line following code here
-    #      To create a message for changing motor speed, use Float32MultiArray()
-    #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
+        # TODO: Implement line following code here
+        #      To create a message for changing motor speed, use Float32MultiArray()
+        #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-    msg = Float32MultiArray()
-    print(ir_readings)
-    if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
-        print("LEFT")
-        msg.data = [0.0, 1.0]
+        msg = Float32MultiArray()
+        print(ir_readings)
+        if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
+            print("LEFT")
+            msg.data = [0.0, 1.0]
 
-    elif ir_readings[3] < IR_THRESHOLD:
-        print("RIGHT")
-        msg.data = [1.0, 0.0]
+        elif ir_readings[3] < IR_THRESHOLD:
+            print("RIGHT")
+            msg.data = [1.0, 0.0]
 
-    elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
-        print("STRAIGHT")
-        msg.data = [1.0, 1.0]
+        elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
+            print("STRAIGHT")
+            msg.data = [1.0, 1.0]
+        #msg.data = [1.0, 1.0]
+        publisher_motor.publish(msg)
+        publisher_sim.publish(Empty())
+        publisher_ping.publish(Empty())
+        #publisher_odom.publish(Empty())
 
-    publisher_motor.publish(msg)
-    publisher_sim.publish(Empty())
+        # TODO: Implement loop closure here
+        if pose2d_sparki_odometry == [-1, 0, 0]:
+            rospy.loginfo("Loop Closure Triggered")
+            rospy.signal_shutdown()
 
-    # TODO: Implement loop closure here
-    if pose2d_sparki_odometry == [0, 0, 0]:
-        rospy.loginfo("Loop Closure Triggered")
-        rospy.signal_shutdown()
+        convert_robot_coords_to_world()
+        populate_map_from_ping()
 
-    convert_ultrasonic_to_robot_coords()
-
-    # TODO: Implement CYCLE TIME
-    end_time = time.time()
-    delay_time = end_time - begin_time
-    if delay_time <= CYCLE_TIME:
-        rospy.sleep(CYCLE_TIME - delay_time)
-    else:
-        print(delay_time)
-        print("Time of cycle exceeded .5 seconds")
+        # TODO: Implement CYCLE TIME
+        end_time = time.time()
+        delay_time = end_time - begin_time
+        if delay_time <= CYCLE_TIME:
+            rospy.sleep(CYCLE_TIME - delay_time)
+        else:
+            print(delay_time)
+            print("Time of cycle exceeded .5 seconds")
 
 
 def init():
@@ -103,8 +109,8 @@ def init():
 
     # TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
 
-    # publisher_servo.publish(int(servo_angle))
-    publisher_servo.publish(45)
+    publisher_servo.publish(int(servo_angle))
+    #publisher_servo.publish(45)
     publisher_sim.publish(Empty())
     rospy.sleep(0.5)
 
@@ -118,35 +124,51 @@ def callback_update_odometry(data):
 
 
 def callback_update_state(data):
-    global ir_readings
+    global ir_readings, state_dict
     state_dict = json.loads(data.data)  # Creates a dictionary object from the JSON string received from the state topic
     # TODO: Load data into your program's local state variables
-    global ir_readings
     ir_readings = state_dict['light_sensors']
     # publisher_servo = state_dict['servo']
 
 
 def convert_ultrasonic_to_robot_coords():
     # TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
-    global sensor_reading, servo_angle
-    sensor_reading = state_dict['ping']
-    # servo_angle = state_dict['servo']
-    x_r, y_r = sensor_reading * math.sin(servo_angle), sensor_reading * math.cos(servo_angle)
-    print(x_r, y_r, "xr,yr readings", state_dict['servo'])
-    return x_r, y_r
+    # Make things way easier if return sensor_reading
+    global sensor_reading, servo_angle, state_dict
 
+    if 'ping' in state_dict:
+        sensor_reading = state_dict['ping']
+        x_r, y_r = sensor_reading * math.sin(servo_angle), sensor_reading * math.cos(servo_angle)
+        print(x_r, y_r, "xr,yr readings", sensor_reading)
+        #return x_r, y_r
+        return sensor_reading
 
-def convert_robot_coords_to_world(x_r, y_r):
+    else:
+        return None
+
+def convert_robot_coords_to_world():
     # TODO: Using odometry, convert robot-centric coordinates into world coordinates
-    publisher_servo = state_dict['ping']
-    x_w, y_w = 0., 0.
+    x_w, y_w = 0,0
+
+    global pose2d_sparki_odometry
+    if pose2d_sparki_odometry != None:
+        x_w, y_w = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
 
     return x_w, y_w
 
-
-def populate_map_from_ping(x_ping, y_ping):
+def populate_map_from_ping():
     # TODO: Given world coordinates of an object detected via ping, fill in the corresponding part of the map
-    pass
+    global pose2d_sparki_odometry
+
+    sensor_reading = convert_ultrasonic_to_robot_coords()
+    x_ping, y_ping = 0, 0
+
+    if pose2d_sparki_odometry != None:
+        x, y, t = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta
+        x_ping, y_ping = x + sensor_reading*math.sin(servo_angle+t),y+sensor_reading * math.cos(servo_angle + t)
+
+    #populate map with x_ping, y_ping
+
 
 
 def display_map():
