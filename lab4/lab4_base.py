@@ -13,8 +13,8 @@ servo_angle = 60
 map_size = 10
 sensor_reading = 0
 state_dict = {}
-max_x = 1.75
-max_y = 1.15
+max_x = 1.72
+max_y = 1.12
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
