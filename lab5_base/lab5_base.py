@@ -25,7 +25,7 @@ g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in t
 g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y) # Number of rows in the grid map
 
 # Map from Lab 4: values of 0 indicate free space, 1 indicates occupied space
-g_WORLD_MAP = [0] * g_NUM_Y_CELLS*g_NUM_X_CELLS # Initialize graph (grid) as array
+g_WORLD_MAP = [[0 for _ in range(g_NUM_X_CELLS)] for _ in range(g_NUM_Y_CELLS)] # Initialize graph (grid) as array
 
 # Source and Destination (I,J) grid coordinates
 g_dest_coordinates = (3,3)
@@ -34,12 +34,12 @@ g_src_coordinates = (0,0)
 
 def create_test_map(map_array):
   # Takes an array representing a map of the world, copies it, and adds simulated obstacles
-  num_cells = len(map_array)
+  #num_cells = len(map_array)
   new_map = copy.copy(map_array)
   # Add obstacles to up to sqrt(n) vertices of the map
-  for i in range(int(math.sqrt(len(map_array)))):
-    random_cell = random.randint(0, num_cells)
-    new_map[random_cell] = 1
+  for i, row in enumerate(map_array):
+    for j, col in enumerate(map_array):
+      map_array[i][j] = random.randint(0, 1)
 
   return new_map
 
@@ -167,7 +167,6 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
 
   # TODO: Insert your code here
 
-
   return final_path
 
 
@@ -194,14 +193,14 @@ def render_map(map_array):
     Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
     (To do this, you'll probably want to iterate from row 'J-1' to '0')
   '''
-  pass
+  for i in map_array:
+    print i
 
 
 def part_1():
   global g_WORLD_MAP
 
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
-
 
   # Use render_map to render your initialized obstacle map
 
@@ -214,6 +213,16 @@ def part_1():
     Goal: (3,1)
     0 -> 1 -> 2 -> 6 -> 7
   '''
+
+  #m = create_test_map(g_WORLD_MAP)
+  m = _load_img_to_intensity_matrix("obstacle_test1.png")
+  render_map(m)
+
+
+  #_load_img_to_intensity_matrix(img_filename)
+
+
+
 
 
 def part_2(args):
