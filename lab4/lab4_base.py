@@ -185,7 +185,11 @@ def populate_map_from_ping():
     if x_ping > 0 and y_ping > 0:
         global col_size, row_size, array
         i,j = int(y_ping/max_y*row_size), int(x_ping/max_x*col_size)
-        #print("i,j", i, j)
+        if i >= row_size:
+            i = row_size-1
+        if j >= col_size:
+            j = col_size-1
+        print("i,j", i, j)
         array[i][j] = 1
 
 
