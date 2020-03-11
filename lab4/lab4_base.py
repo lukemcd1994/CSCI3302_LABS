@@ -13,12 +13,16 @@ servo_angle = 0
 map_size = 10
 sensor_reading = 0
 state_dict = {}
+max_x = 1.7209
+max_y = 1.1211
 
 # TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 ir_readings = [0, 0, 0, 0, 0]  # 0 is far left, 4 is far right
 
 # TODO: Create data structure to hold map representation
-array = [[0 for i in range(map_size)] for j in range(map_size)]
+col_size = 20
+row_size = 14
+array = [[0 for j in range(col_size)] for i in range(row_size)]
 
 # TODO: Use these variables to hold your publishers and subscribers
 publisher_motor = None
@@ -54,17 +58,17 @@ def main():
         msg = Float32MultiArray()
         print(ir_readings)
         if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
-            print("LEFT")
+            print("RIGHT")
             msg.data = [0.0, 1.0]
 
         elif ir_readings[3] < IR_THRESHOLD:
-            print("RIGHT")
+            print("LEFT")
             msg.data = [1.0, 0.0]
 
         elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
             print("STRAIGHT")
             msg.data = [1.0, 1.0]
-        #msg.data = [1.0, 1.0]
+
         publisher_motor.publish(msg)
         publisher_sim.publish(Empty())
         publisher_ping.publish(Empty())
@@ -79,6 +83,7 @@ def main():
         populate_map_from_ping()
 
         # TODO: Implement CYCLE TIME
+
         end_time = time.time()
         delay_time = end_time - begin_time
         if delay_time <= CYCLE_TIME:
@@ -124,11 +129,11 @@ def callback_update_odometry(data):
 
 
 def callback_update_state(data):
+    # TODO: Load data into your program's local state variables
     global ir_readings, state_dict
     state_dict = json.loads(data.data)  # Creates a dictionary object from the JSON string received from the state topic
-    # TODO: Load data into your program's local state variables
     ir_readings = state_dict['light_sensors']
-    # publisher_servo = state_dict['servo']
+    #publisher_servo = state_dict['servo']
 
 
 def convert_ultrasonic_to_robot_coords():
@@ -153,42 +158,45 @@ def convert_robot_coords_to_world():
     global pose2d_sparki_odometry
     if pose2d_sparki_odometry != None:
         x_w, y_w = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
-
+    print(x_w, y_w, "world coord")
     return x_w, y_w
 
 def populate_map_from_ping():
     # TODO: Given world coordinates of an object detected via ping, fill in the corresponding part of the map
+
     global pose2d_sparki_odometry
 
     sensor_reading = convert_ultrasonic_to_robot_coords()
     x_ping, y_ping = 0, 0
 
-    if pose2d_sparki_odometry != None:
+    if pose2d_sparki_odometry != None and sensor_reading > 0:
         x, y, t = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta
         x_ping, y_ping = x + sensor_reading*math.sin(servo_angle+t),y+sensor_reading * math.cos(servo_angle + t)
 
-    #populate map with x_ping, y_ping
 
+    #populate map with x_ping, y_ping
+    if x_ping > 0 and y_ping > 0:
+        global col_size, row_size, array
+        array[int(max_y/y_ping*row_size)][int(max_x/x_ping*col_size)] = 1
 
 
 def display_map():
     # TODO: Display the map
-    for i in range(map_size):
-        for j in range(map_size):
+    for i in range(row_size):
+        for j in range(col_size):
             print(map[i][j] + " ")
         print("\n")
-
     pass
 
 
 def ij_to_cell_index(i, j):
     # TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
-    return 0
+    return math.floor(i/3), math.floor(j/3)
 
 
 def cell_index_to_ij(cell_index):
     # TODO: Convert from cell_index to (i,j) coordinates
-    return 0, 0
+    return cell_index[0]*3, cell_index[1]*3
 
 
 def cost(cell_index_from, cell_index_to):

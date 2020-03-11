@@ -99,7 +99,7 @@ def get_ir_reading():
     # Find the IR readings 'underneath' the Sparki robot and return them
     # Find pixels halfway between the center and front of the robot
     global g_pose, g_world_surface, SPARKI_SIZE_RADIUS, MAP_RESOLUTION, MAP_SIZE_X, MAP_SIZE_Y
-    center_point = [g_e.x, g_pose.y]
+    center_point = [g_pose.x, g_pose.y]
     sparki_sensor_center_point_offset = 0.5 * SPARKI_SIZE_RADIUS
     forward_point = (center_point[0] + math.cos(g_pose.theta)*sparki_sensor_center_point_offset, \
                      center_point[1] + math.sin(g_pose.theta)*sparki_sensor_center_point_offset)
