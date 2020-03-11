@@ -194,17 +194,21 @@ def render_map(map_array):
     Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
     (To do this, you'll probably want to iterate from row 'J-1' to '0')
   '''
-  pass
+  i = len(map_array)
+  print(map_array)
+
 
 
 def part_1():
   global g_WORLD_MAP
 
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
+  grid_map = create_test_map(g_WORLD_MAP)
 
 
   # Use render_map to render your initialized obstacle map
-
+  render_map(grid_map)
+  
   # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
 
   '''
