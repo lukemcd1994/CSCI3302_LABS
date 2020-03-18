@@ -8,7 +8,9 @@ import random
 import argparse
 from PIL import Image
 import numpy as np
+import sys
 from pprint import pprint
+import heapq
 
 g_CYCLE_TIME = .100
 
@@ -19,8 +21,8 @@ MAP_SIZE_Y = None
 # Default parameters will create a 4x4 grid to test with
 g_MAP_SIZE_X = 2. # 2m wide
 g_MAP_SIZE_Y = 1.5 # 1.5m tall
-g_MAP_RESOLUTION_X = 0.5 # Each col represents 50cm
-g_MAP_RESOLUTION_Y = 0.375 # Each row represents 37.5cm
+g_MAP_RESOLUTION_X = 0.25 # Each col represents cm
+g_MAP_RESOLUTION_Y = 0.25 # Each row represents cm
 g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
 g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y) # Number of rows in the grid map
 
@@ -39,7 +41,7 @@ def create_test_map(map_array):
   # Add obstacles to up to sqrt(n) vertices of the map
   for i, row in enumerate(map_array):
     for j, col in enumerate(map_array):
-      map_array[i][j] = random.randint(0, 1)
+      map_array[i][j] = int(random.random()*1.3)
 
   return new_map
 
@@ -65,6 +67,10 @@ def _load_img_to_intensity_matrix(img_filename):
       for x in range(img.width):
           pixel = img.getpixel((x,y))
           grid[y,x] = 255 - pixel[0] # Dark pixels have high values to indicate being occupied/having something interesting
+
+          #NEW obstacle function that considers color, range = [0,510]
+          #grid[y, x] = 255 - (2*min(pixel)-max(pixel))
+          #recommend threahold: wall if val > 75
 
   return grid
 
@@ -124,8 +130,83 @@ def get_travel_cost(vertex_source, vertex_dest):
         vertex_dest corresponds to (i,j) coordinates outside the map
         vertex_source and vertex_dest are not adjacent to each other (i.e., more than 1 move away from each other)
   '''
+  global g_WORLD_MAP
+  m = copy.deepcopy(g_WORLD_MAP)
+  for i, row in enumerate(m):
+    for j, col in enumerate(row):
+      if col == 1:
+        m[i][j] = 10000
+      if col == 0:
+        m[i][j] = 1000
+  i1, j1 = vertex_source
+  i2, j2 = vertex_dest
 
-  return 100
+  ### check if source/dest valid ###
+  try:
+    if m[i1][j1] > 1000:
+      print("Starting index on a wall")
+      return 1000, []
+  except:
+    print("Starting index out of bound")
+    return 1000, []
+  try:
+    if m[i2][j2] > 1000:
+      print("Target index on a wall")
+      return 1000, []
+  except:
+    print("Target index out of bound")
+    return 1000, []
+
+  # start of magic algorithm
+  parent = {}
+  cost = {}
+  cost[i1,j1] = 0
+  parent[i1,j1] = i1,j1
+
+  #a heapq with smallest val always in front
+  h = []
+  heapq.heappush(h, [0, [i1,j1]])
+
+  row_size = len(m)
+  col_size = len(m[0])
+  while len(h) > 0:
+    #always poping lowest cost coord from queue
+    temp = heapq.heappop(h)
+    i, j, c = temp[1][0], temp[1][1], temp[0]
+
+    #put surrounding tile to list
+    neighbors = []
+    if i > 0: neighbors.append([i - 1, j])
+    if j > 0: neighbors.append([i, j - 1])
+    if i < row_size - 1: neighbors.append([i + 1, j])
+    if j < col_size - 1: neighbors.append([i, j + 1])
+
+    #update all neighbors
+    for ni,nj in neighbors:
+      #do not expand parent or wall
+      if parent[i,j] == (ni,nj) or m[ni][nj] > 1000:
+        pass
+
+      else:
+        #expand if there is lower cost, or never expanded
+        if (ni,nj) in cost:
+          if cost[ni,nj] > c+1:
+            cost[ni, nj] = c+1
+            parent[ni,nj] = i,j
+            if [c+1, [ni, nj]] not in h:
+              heapq.heappush(h, [c+1, [ni, nj]])
+        else:
+          cost[ni, nj] = c + 1
+          parent[ni, nj] = i, j
+          if [c + 1, [ni, nj]] not in h:
+            heapq.heappush(h, [c + 1, [ni, nj]])
+
+  path = reconstruct_path(parent, vertex_source, vertex_dest)
+
+  if len(path) == 0:
+    return 1000, path
+  else:
+    return cost[vertex_dest], path
 
 
 def run_dijkstra(source_vertex):
@@ -163,14 +244,20 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
   If there is no path between source_vertex and dest_vertex, as indicated by hitting a '-1' on the
   path from dest to source, return an empty list.
   '''
-  final_path = []
 
   # TODO: Insert your code here
+  final_path = []
+  if dest_vertex in prev:
+    temp = dest_vertex
+    final_path.append(dest_vertex)
+    while prev[temp] != temp:
+      final_path = [prev[temp]] + final_path
+      temp = prev[temp]
 
   return final_path
 
 
-def render_map(map_array):
+def render_map(map_array,start, dest):
   '''
   TODO-
     Display the map in the following format:
@@ -188,13 +275,33 @@ def render_map(map_array):
       .  .  .  .
       . [ ][ ] .
       .  . [ ] .
-
-
     Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
     (To do this, you'll probably want to iterate from row 'J-1' to '0')
   '''
-  for i in map_array:
-    print i
+  l = len(map_array)
+  w = len(map_array[0])
+  for i, row in enumerate(map_array[::-1]):
+    r = str(l-i-1)+": "
+    for j, col in enumerate(row):
+      if col == 1: r += "["
+      else: r += " "
+
+      if (l-i-1,j) == start: r += "S"
+      elif (l-i-1,j) == dest: r += "T"
+      elif col == 0: r += "."
+      else: r += " "
+
+      if col == 1: r += "]"
+      else: r += " "
+    print r
+  r = "r/c "
+  for j in range(w):
+    r += str(j)+": "
+  print r
+
+  # img = Image.fromarray(data, 'RGB')
+  # img.save('my.png')
+  # img.show()
 
 
 def part_1():
@@ -213,15 +320,18 @@ def part_1():
     Goal: (3,1)
     0 -> 1 -> 2 -> 6 -> 7
   '''
+  start, dest = (0,0), (4,5)
+  print("Part 1:")
+  print("Coord format: (row, col)")
+  print "Starting from:", start, " Ending at:", dest
+  m = create_test_map(g_WORLD_MAP)
+  #m = _load_img_to_intensity_matrix("obstacles_test2.png")
+  render_map(m,start, dest)
 
-  #m = create_test_map(g_WORLD_MAP)
-  m = _load_img_to_intensity_matrix("obstacle_test1.png")
-  render_map(m)
+  cost, path = get_travel_cost(start, dest)
 
-
+  print("Cost:", cost, "Path:", path)
   #_load_img_to_intensity_matrix(img_filename)
-
-
 
 
 
@@ -257,6 +367,9 @@ if __name__ == "__main__":
   parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
-
+  # print ("This is the name of the script: ", sys.argv[0])
+  # print ("Number of arguments: ", len(sys.argv))
+  # print ("The arguments are: ", sys.argv)
+  # print (args)
   part_1()
   # part_2(args)
