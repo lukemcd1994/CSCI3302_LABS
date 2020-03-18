@@ -394,7 +394,8 @@ def part_2(args):
   dest = l-1-int(g_dest_coordinates[0]), int(g_dest_coordinates[1])
   print("Part 2:")
   print("COORD FORMAT: (row, col), MEASURED IN CM/pixle not M")
-  print "Starting from:", int(g_src_coordinates[0]), " Ending at:", dest
+  print "Starting from:", (int(g_src_coordinates[0]),int(g_src_coordinates[1])), \
+    "Ending at:", (int(g_dest_coordinates[0]),int(g_dest_coordinates[1]))
 
   print("Grid map shown in black and wite form")
   print("Path drawn on picture with alternating red/green line")
