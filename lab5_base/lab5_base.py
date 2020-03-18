@@ -45,6 +45,20 @@ def create_test_map(map_array):
 
   return new_map
 
+def load_img(img_filename):
+  global MAP_SIZE_X, MAP_SIZE_Y
+
+  if img_filename is None:
+    grid = np.zeros([800, 1200])
+    return grid
+
+  img = Image.open(img_filename)
+  grid = np.zeros((img.height, img.width,3))
+  for y in range(img.height):
+    for x in range(img.width):
+      p = img.getpixel((x, y))
+      grid[y, x] = [int(i) for i in p]
+  return grid
 
 def _load_img_to_intensity_matrix(img_filename):
   '''
@@ -300,23 +314,17 @@ def render_map(map_array,start, dest):
     r += str(j)+": "
   print r
 
-  # img = Image.fromarray(data, 'RGB')
-  # img.save('my.png')
-  # img.show()
+def render_map_2(data, path):
 
+
+  img = Image.fromarray(data, 'RGB')
+  img.save('my.png')
+  img.show()
 
 def part_1():
   global g_WORLD_MAP
-
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
-  grid_map = create_test_map(g_WORLD_MAP)
-
-  # Use render_map to render your initialized obstacle map
-  print(grid_map)
-  render_map(grid_map)
-  
   # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
-
   '''
   TODO-
     Display the final path in the following format:
@@ -325,8 +333,8 @@ def part_1():
     0 -> 1 -> 2 -> 6 -> 7
   '''
   start, dest = (0,0), (4,5)
-  print("Part 1:")
-  print("Coord format: (row, col)")
+  print("Part 1 (with random generated walls):")
+  print("COORD FORMAT: (row, col)")
   print "Starting from:", start, " Ending at:", dest
   m = create_test_map(g_WORLD_MAP)
   #m = _load_img_to_intensity_matrix("obstacles_test2.png")
@@ -334,10 +342,8 @@ def part_1():
 
   cost, path = get_travel_cost(start, dest)
 
-  print("Cost:", cost, "Path:", path)
+  print "Cost:", cost, "Path:", path
   #_load_img_to_intensity_matrix(img_filename)
-
-
 
 def part_2(args):
   global g_dest_coordinates
@@ -346,11 +352,9 @@ def part_2(args):
 
   g_src_coordinates = (args.src_coordinates[0], args.src_coordinates[1])
   g_dest_coordinates = (args.dest_coordinates[0], args.dest_coordinates[1])
-
   # pixel_grid has intensity values for all the pixels
   # You will have to convert it to the earlier 0 and 1 matrix yourself
   pixel_grid = _load_img_to_intensity_matrix(args.obstacles)
-
   '''
   TODO -
   1) Compute the g_WORLD_MAP -- depending on the resolution, you need to decide if your cell is an obstacle cell or a free cell.
@@ -358,13 +362,33 @@ def part_2(args):
   3) Show your plan/path on the image
   Feel free to add more helper functions
   '''
-
   #### Your code goes here ####
+  start, dest = g_src_coordinates, g_dest_coordinates
+  print("Part 2 (with path marked with alternating red/green line):")
+  print("COORD FORMAT: (row, col), MEASURED IN CM/pixle not M")
+  print "Starting from:", start, " Ending at:", dest
+
+  for i, row in enumerate(pixel_grid):
+    for j, col in enumerate(row):
+      if col > 100:
+        pixel_grid[i][j] = 1
+      else:
+        pixel_grid[i][j] = 0
+  g_WORLD_MAP = pixel_grid
+  #image = load_img(args.obstacles)
+  image = load_img('cu_pic.jpg')
+  # m = _load_img_to_intensity_matrix("obstacles_test2.png")
+  cost, path = 1000, []
+  #cost, path = get_travel_cost(start, dest)
+
+  render_map_2(image, path)
+
+  print "Cost:", cost, "Path:", path
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
-  parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
-  parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.3, 0.7], help='Goal x, y location in world coords')
+  parser.add_argument('-s','--src_coordinates', nargs=2, default=[3, 1], help='Starting x, y location in world coords')
+  parser.add_argument('-g','--dest_coordinates', nargs=2, default=[1, 3], help='Goal x, y location in world coords')
   parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
@@ -372,5 +396,5 @@ if __name__ == "__main__":
   # print ("Number of arguments: ", len(sys.argv))
   # print ("The arguments are: ", sys.argv)
   # print (args)
-  part_1()
-  # part_2(args)
+  #part_1()
+  part_2(args)
