@@ -357,9 +357,6 @@ def part_2(args):
 
   #### Your code goes here ####
 
-
-
-
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
   parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
