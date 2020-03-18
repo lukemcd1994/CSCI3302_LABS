@@ -19,8 +19,8 @@ MAP_SIZE_X = None
 MAP_SIZE_Y = None
 
 # Default parameters will create a 4x4 grid to test with
-g_MAP_SIZE_X = 2. # 2m wide
-g_MAP_SIZE_Y = 1.5 # 1.5m tall
+g_MAP_SIZE_X = 1 # 2m wide
+g_MAP_SIZE_Y = 1 # 1.5m tall
 g_MAP_RESOLUTION_X = 0.25 # Each col represents cm
 g_MAP_RESOLUTION_Y = 0.25 # Each row represents cm
 g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
@@ -33,6 +33,8 @@ g_WORLD_MAP = [[0 for _ in range(g_NUM_X_CELLS)] for _ in range(g_NUM_Y_CELLS)] 
 g_dest_coordinates = (3,3)
 g_src_coordinates = (0,0)
 
+def rev(n):
+  return n[1], n[0]
 
 def create_test_map(map_array):
   # Takes an array representing a map of the world, copies it, and adds simulated obstacles
@@ -144,6 +146,9 @@ def get_travel_cost(vertex_source, vertex_dest):
         vertex_dest corresponds to (i,j) coordinates outside the map
         vertex_source and vertex_dest are not adjacent to each other (i.e., more than 1 move away from each other)
   '''
+  if vertex_source == vertex_dest:
+    return 0, [vertex_dest]
+
   global g_WORLD_MAP
   m = copy.deepcopy(g_WORLD_MAP)
   for i, row in enumerate(m):
@@ -152,8 +157,8 @@ def get_travel_cost(vertex_source, vertex_dest):
         m[i][j] = 10000
       if col == 0:
         m[i][j] = 1000
-  i1, j1 = vertex_source
-  i2, j2 = vertex_dest
+  j1, i1 = vertex_source
+  j2, i2 = vertex_dest
 
   ### check if source/dest valid ###
   try:
@@ -186,6 +191,8 @@ def get_travel_cost(vertex_source, vertex_dest):
   while len(h) > 0:
     #always poping lowest cost coord from queue
     temp = heapq.heappop(h)
+    if temp == (i2, j2):
+      return cost[vertex_dest], reconstruct_path(parent, (i1, j1), (i2, j2))
     i, j, c = temp[1][0], temp[1][1], temp[0]
 
     #put surrounding tile to list
@@ -215,12 +222,12 @@ def get_travel_cost(vertex_source, vertex_dest):
           if [c + 1, [ni, nj]] not in h:
             heapq.heappush(h, [c + 1, [ni, nj]])
 
-  path = reconstruct_path(parent, vertex_source, vertex_dest)
+  path = reconstruct_path(parent, (i1, j1), (i2, j2))
 
   if len(path) == 0:
     return 1000, path
   else:
-    return cost[vertex_dest], path
+    return cost[i2,j2], path
 
 
 def run_dijkstra(source_vertex):
@@ -263,9 +270,9 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
   final_path = []
   if dest_vertex in prev:
     temp = dest_vertex
-    final_path.append(dest_vertex)
+    final_path.append((dest_vertex[1],dest_vertex[0]))
     while prev[temp] != temp:
-      final_path = [prev[temp]] + final_path
+      final_path = [(prev[temp][1],prev[temp][0])] + final_path
       temp = prev[temp]
 
   return final_path
@@ -301,8 +308,8 @@ def render_map(map_array,start, dest):
       if col == 1: r += "["
       else: r += " "
 
-      if (l-i-1,j) == start: r += "S"
-      elif (l-i-1,j) == dest: r += "T"
+      if (j,l-i-1) == start: r += "S"
+      elif (j,l-i-1) == dest: r += "T"
       elif col == 0: r += "."
       else: r += " "
 
@@ -317,16 +324,17 @@ def render_map(map_array,start, dest):
 def render_map_2(data, path):
 
   h, w = len(data), len(data[0])
-  r = True
+  count = 4
   for y in range(h):
     for x in range(w):
-      if (y,x) in path:
-        if r:
+      if (x,y) in path:
+        count -= 1
+        if count > 0:
           data[y, x] = [255, 0, 0]
-          r = False
         else:
           data[y, x] = [0, 255, 0]
-          r = True
+          if count <= -3:
+            count = 4
 
   img = Image.fromarray(data, 'RGB')
   img.save('path.png')
@@ -347,6 +355,7 @@ def render_map_3(data):
   img.save('grid.png')
   img.show()
 
+
 def part_1():
   global g_WORLD_MAP
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
@@ -358,12 +367,12 @@ def part_1():
     Goal: (3,1)
     0 -> 1 -> 2 -> 6 -> 7
   '''
-  start, dest = (0,0), (4,5)
-  print("Part 1 (with random generated walls):")
-  print("COORD FORMAT: (row, col)")
+  #setup start, dest
+  start, dest = (0,0), (3,2)
+  print ""
+  print("Part 1 (start,dest is hard coded in part_1):")
   print "Starting from:", start, " Ending at:", dest
   m = create_test_map(g_WORLD_MAP)
-  #m = _load_img_to_intensity_matrix("obstacles_test2.png")
   render_map(m,start, dest)
 
   cost, path = get_travel_cost(start, dest)
@@ -371,7 +380,6 @@ def part_1():
     cost = -1
   print "Cost(-1 when not possible):", cost
   print "Path:", path
-  #_load_img_to_intensity_matrix(img_filename)
 
 def part_2(args):
   global g_dest_coordinates
@@ -392,14 +400,16 @@ def part_2(args):
   '''
   #### Your code goes here ####
   l, w = len(pixel_grid), len(pixel_grid[0])
-  start = l-1-int(g_src_coordinates[0]), int(g_src_coordinates[1])
-  dest = l-1-int(g_dest_coordinates[0]), int(g_dest_coordinates[1])
+  start = int(float(g_src_coordinates[0])/1.8*w), l-1-int(float(g_src_coordinates[1])/1.2*l)
+  dest = int(float(g_dest_coordinates[0])/1.8*w), l-1-int(float(g_dest_coordinates[1])/1.2*l)
+  print ""
   print("Part 2:")
-  print("COORD FORMAT: (row, col), MEASURED IN cm/pixle not M")
-  print "Starting from:", (int(g_src_coordinates[0]),int(g_src_coordinates[1])), \
-    "Ending at:", (int(g_dest_coordinates[0]),int(g_dest_coordinates[1]))
+  #print("COORD FORMAT: (row, col), MEASURED IN cm/pixle not M")
+  print "Image Size:", w, l
+  print "Starting from:", ((g_src_coordinates[0]),(g_src_coordinates[1])), \
+    "Ending at:", ((g_dest_coordinates[0]),(g_dest_coordinates[1]))
 
-  print("Grid map shown in black and wite form")
+  print("Grid map shown in black and white form")
   print("Path drawn on picture with alternating red/green line")
 
   for i, row in enumerate(pixel_grid):
@@ -422,7 +432,7 @@ def part_2(args):
   render_map_2(image, path)
   if len(path) == 0:
     cost = -1
-  print "Cost (in terms of pixle/cm)(-1 if not possible):", cost
+  print "Cost (in pixels)(-1 if not possible):", cost
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
@@ -435,5 +445,5 @@ if __name__ == "__main__":
   # print ("Number of arguments: ", len(sys.argv))
   #print ("The arguments are: ", sys.argv)
   # print (args)
-  part_1()
+  #part_1()
   part_2(args)
