@@ -446,5 +446,5 @@ if __name__ == "__main__":
   #print ("The arguments are: ", sys.argv)
   # print (args)
 
-  part_1()
-  #part_2(args)
+  #part_1()
+  part_2(args)
