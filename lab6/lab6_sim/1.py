@@ -271,7 +271,7 @@ def pixle_to_coord(path, max_xy, max_pixle):
   new_path = []
   r_x, r_y = x/p_x, y/p_y
   for i,j in path:
-    new_path.append([i*r_x, j*r_y])
+    new_path.append([i*r_x, y-j*r_y])
   return new_path
 
 def render_map(map_array,start, dest):
@@ -398,6 +398,7 @@ def part_2(args):
 
   #print waypoints
   wp = find_waypoint(path)
+  print "Init waypoints:", wp
   wp = pixle_to_coord(wp, [1.8, 1.2], [w, l])
   print "Waypoints:", wp
 
