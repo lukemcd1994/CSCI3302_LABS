@@ -47,6 +47,57 @@ def to_radians( deg):
 def to_degrees( rad):
   return  rad * 180/3.14159
 
+def move(path): #assumes an array of [ [x1, y1], [x2, y2], etc]
+    for coord in path:
+	x = pose2d_sparki_odometry.x
+	y = pose2d_sparki_odometry.y
+	theta = pose2d_sparki_odometry.theta
+	b_err = math.atan2(coord[1] - y, coord[0] - x)
+	dis = math.sqrt(pow(2,coord[0] - x) + pow(2, coord[1] - y))
+
+	#move sparki to the berring error
+	msg = Float32MultiArray()  
+	msg.data = [4.0, 4.0]
+	
+	rotate(180)
+
+	'''current_distance = 0
+	t0 = rospy.Time.now().to_sec()
+	while current_distance < dis:
+	     publisher_motor.publish(msg)
+             publisher_sim.publish(Empty())
+	     t1 = rospy.Time.now().to_sec()
+             current_distance = 8.0 * (t1 - t0)
+	print(pose2d_sparki_odometry)
+	msg.data = [0.0, 0.0]
+    	publisher_motor.publish(msg)'''
+
+	
+def rotate(angle):
+   #rotate for angel/speed seconds
+
+    rad_angle = to_radians(angle)
+    time_to_rotate = rad_angle/2.0 *10
+    print(time_to_rotate)
+    msg = Float32MultiArray()  
+    msg.data = [2.0, -2.0]
+
+    # Setting the current time for distance calculus
+    t0 = rospy.Time.now().to_sec()
+    t1 = rospy.Time.now().to_sec()
+    
+    while(t1 - t0 <= time_to_rotate):
+	publisher_motor.publish(msg)
+        publisher_sim.publish(Empty())
+	t1 = rospy.Time.now().to_sec()
+
+    print(pose2d_sparki_odometry.theta)
+    print("ALL DONE ROATING")
+    msg.data = [0.0, 0.0]
+    publisher_motor.publish(msg)	
+    publisher_sim.publish(Empty())
+    rospy.sleep(10)
+
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
@@ -64,47 +115,21 @@ def main():
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-        msg = Float32MultiArray()
-        #print(ir_readings)
-        if (ir_readings[1] < IR_THRESHOLD):  # TURN LEFT
-            #print("RIGHT")
-            msg.data = [0.0, 1.0]
-
-        elif ir_readings[3] < IR_THRESHOLD:
-            #print("LEFT")
-            msg.data = [1.0, 0.0]
-
-        elif ir_readings[2] < IR_THRESHOLD and ir_readings[1] > IR_THRESHOLD and ir_readings[3] > IR_THRESHOLD:
-            #print("STRAIGHT")
-            msg.data = [1.0, 1.0]
+       	msg = Float32MultiArray()     
+	msg.data = [1.0,1.0]
+	print(pose2d_sparki_odometry.theta)
 
         publisher_motor.publish(msg)
         publisher_sim.publish(Empty())
-        publisher_ping.publish(Empty())
         #publisher_odom.publish(Empty())
 
         # TODO: Implement loop closure here
         x,y = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
         #print("sxsy", starting_x, starting_y, x,y)
 
-        if abs(y-starting_y) < 0.02 and x < starting_x and abs(x-starting_x) < 0.02:
-            #turn off motor before exiting
-            msg.data = [0.0, 0.0]
-            publisher_motor.publish(msg)
-            rospy.loginfo("Loop Closure Triggered")
-            rospy.signal_shutdown("Complete")
-
-        convert_robot_coords_to_world()
-        populate_map_from_ping()
-
-        # printing info, count cost every 200 loops to avoid lagging
-        i_from, i_to = ij_to_cell_index(y_from, x_from), ij_to_cell_index(y_to, x_to)
-        if cycle_count % 200 == 1:
-            cost_ij = cost(i_from, i_to)
-            display_map()
-            print "cost from index {0} to {1} is: {2}".format(i_from, i_to, cost(i_from, i_to))
-
-        cycle_count += 1
+	arr = [[1.5, 0], [1.7, 0]]
+	move(arr)
+      
 
 
         # TODO: Implement CYCLE TIME
@@ -115,11 +140,6 @@ def main():
             rospy.sleep(CYCLE_TIME - delay_time)
         else:
             print("Cycle time exceeded: ", delay_time)
-
-    #final message
-    i_from, i_to = ij_to_cell_index(y_from,x_from), ij_to_cell_index(y_to,x_to)
-    print "Final cost from index {0} to {1} is: {2}".format(i_from, i_to, cost(i_from, i_to))
-
 
 def init():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
