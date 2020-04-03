@@ -256,7 +256,6 @@ def find_waypoint(path):
   prev = path[0]
   waypoints = []
   for p in path:
-    print(heading)
     h = find_heading(prev, p)
     if h != heading:
       waypoints.append(prev)
