@@ -106,7 +106,6 @@ def main():
 
         cycle_count += 1
 
-
         # TODO: Implement CYCLE TIME
         end_time = time.time()
         delay_time = end_time - begin_time
