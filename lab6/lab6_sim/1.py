@@ -19,8 +19,8 @@ MAP_SIZE_X = None
 MAP_SIZE_Y = None
 
 # Default parameters will create a 4x4 grid to test with
-g_MAP_SIZE_X = 1 # 2m wide
-g_MAP_SIZE_Y = 1 # 1.5m tall
+g_MAP_SIZE_X = 3 # 2m wide
+g_MAP_SIZE_Y = 3 # 1.5m tall
 g_MAP_RESOLUTION_X = 0.25 # Each col represents cm
 g_MAP_RESOLUTION_Y = 0.25 # Each row represents cm
 g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
@@ -38,12 +38,11 @@ def rev(n):
 
 def create_test_map(map_array):
   # Takes an array representing a map of the world, copies it, and adds simulated obstacles
-  #num_cells = len(map_array)
   new_map = copy.copy(map_array)
   # Add obstacles to up to sqrt(n) vertices of the map
   for i, row in enumerate(map_array):
     for j, col in enumerate(map_array):
-      map_array[i][j] = int(random.random()*1.3)
+      map_array[i][j] = int(random.random()*1.25)
   return new_map
 
 def load_img(img_filename):
@@ -84,10 +83,6 @@ def _load_img_to_intensity_matrix(img_filename):
           pixel = img.getpixel((x,y))
           grid[y,x] = 255 - pixel[0] # Dark pixels have high values to indicate being occupied/having something interesting
 
-          #NEW obstacle function that considers color, range = [0,510]
-          #grid[y, x] = 255 - (2*min(pixel)-max(pixel))
-          #recommend threahold: wall if val > 75
-
   return grid
 
 
@@ -103,7 +98,6 @@ def ij_to_vertex_index(i,j):
   '''
   i: Column of grid map
   j: Row of grid map
-
   returns integer 'vertex index'
   '''
   global g_NUM_X_CELLS
@@ -112,9 +106,6 @@ def ij_to_vertex_index(i,j):
 
 def ij_coordinates_to_xy_coordinates(i,j):
   '''
-  i: Column of grid map
-  j: Row of grid map
-
   returns (X, Y) coordinates in meters at the center of grid cell (i,j)
   '''
   global g_MAP_RESOLUTION_X, g_MAP_RESOLUTION_Y
@@ -122,9 +113,6 @@ def ij_coordinates_to_xy_coordinates(i,j):
 
 def xy_coordinates_to_ij_coordinates(x,y):
   '''
-  i: Column of grid map
-  j: Row of grid map
-
   returns (X, Y) coordinates in meters at the center of grid cell (i,j)
   '''
   global g_MAP_RESOLUTION_X, g_MAP_RESOLUTION_Y
@@ -229,34 +217,6 @@ def get_travel_cost(vertex_source, vertex_dest):
   else:
     return cost[i2,j2], path
 
-
-def run_dijkstra(source_vertex):
-  '''
-  source_vertex: vertex index to find all paths back to
-  returns: 'prev' array from a completed Dijkstra's algorithm run
-
-  Function to return an array of ints corresponding to the 'prev' variable in Dijkstra's algorithm
-  The 'prev' array stores the next vertex on the best path back to source_vertex.
-  Thus, the returned array prev can be treated as a lookup table:  prev[vertex_index] = next vertex index on the path back to source_vertex
-  '''
-  global g_NUM_X_CELLS, g_NUM_Y_CELLS
-
-  # Array mapping vertex_index to distance of shortest path from vertex_index to source_vertex.
-  dist = [0] * g_NUM_X_CELLS * g_NUM_Y_CELLS
-
-  # Queue for identifying which vertices are up to still be explored:
-  # Will contain tuples of (vertex_index, cost), sorted such that the min cost is first to be extracted (explore cheapest/most promising vertices first)
-  Q_cost = []
-
-  # Array of ints for storing the next step (vertex_index) on the shortest path back to source_vertex for each vertex in the graph
-  prev = [-1] * g_NUM_X_CELLS*g_NUM_Y_CELLS
-
-  # Insert your Dijkstra's code here. Don't forget to initialize Q_cost properly!
-
-  # Return results of algorithm run
-  return prev
-
-
 def reconstruct_path(prev, source_vertex, dest_vertex):
   '''
   Given a populated 'prev' array, a source vertex_index, and destination vertex_index,
@@ -277,28 +237,45 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
 
   return final_path
 
+def find_heading(prev, curr):
+  #return Right, Left, Up, Down, " "
+  x1,y1 = prev
+  x2,y2 = curr
+  if x2 > x1: return "R"
+  if x2 < x1: return "L"
+  if y2 > y1: return "U"
+  if y2 < y1: return "D"
+  return " "
+
+
+def find_waypoint(path):
+  if len(path) <= 1:
+    return path
+
+  heading = " "
+  prev = path[0]
+  waypoints = []
+  for p in path:
+    print(heading)
+    h = find_heading(prev, p)
+    if h != heading:
+      waypoints.append(prev)
+      heading = h
+    prev = p
+  waypoints.append(path[-1])
+
+  return waypoints
+
+def pixle_to_coord(path, max_xy, max_pixle):
+  x, y = max_xy
+  p_x, p_y = max_pixle
+  new_path = []
+  r_x, r_y = x/p_x, y/p_y
+  for i,j in path:
+    new_path.append([i*r_x, j*r_y])
+  return new_path
 
 def render_map(map_array,start, dest):
-  '''
-  TODO-
-    Display the map in the following format:
-    Use " . " for free grid cells
-    Use "[ ]" for occupied grid cells
-
-    Example:
-    For g_WORLD_MAP = [0, 0, 1, 0,
-                       0, 1, 1, 0,
-                       0, 0, 0, 0,
-                       0, 0, 0, 0]
-    There are obstacles at (I,J) coordinates: [ (2,0), (1,1), (2,1) ]
-    The map should render as:
-      .  .  .  .
-      .  .  .  .
-      . [ ][ ] .
-      .  . [ ] .
-    Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
-    (To do this, you'll probably want to iterate from row 'J-1' to '0')
-  '''
 
   l = len(map_array)
   w = len(map_array[0])
@@ -358,17 +335,9 @@ def render_map_3(data):
 
 def part_1():
   global g_WORLD_MAP
-  # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
-  # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
-  '''
-  TODO-
-    Display the final path in the following format:
-    Source: (0,0)
-    Goal: (3,1)
-    0 -> 1 -> 2 -> 6 -> 7
-  '''
+
   #setup start, dest
-  start, dest = (0,0), (3,2)
+  start, dest = (0,0), (7,8)
   print ""
   print("Part 1 (start,dest is hard coded in part_1):")
   print "Starting from:", start, " Ending at:", dest
@@ -380,6 +349,7 @@ def part_1():
     cost = -1
   print "Cost(-1 when not possible):", cost
   print "Path:", path
+  print "Waypoint", find_waypoint(path)
 
 def part_2(args):
   global g_dest_coordinates
@@ -402,9 +372,8 @@ def part_2(args):
   l, w = len(pixel_grid), len(pixel_grid[0])
   start = int(float(g_src_coordinates[0])/1.8*w), l-1-int(float(g_src_coordinates[1])/1.2*l)
   dest = int(float(g_dest_coordinates[0])/1.8*w), l-1-int(float(g_dest_coordinates[1])/1.2*l)
-  print ""
+  #print ""
   print("Part 2:")
-  #print("COORD FORMAT: (row, col), MEASURED IN cm/pixle not M")
   print "Image Size:", w, l
   print "Starting from:", ((g_src_coordinates[0]),(g_src_coordinates[1])), \
     "Ending at:", ((g_dest_coordinates[0]),(g_dest_coordinates[1]))
@@ -422,11 +391,16 @@ def part_2(args):
   g_WORLD_MAP = pixel_grid
 
   #display obstacle map generated by image
-  render_map_3(pixel_grid)
+  #render_map_3(pixel_grid)
 
   #image for display purpose
   image = load_img(args.obstacles)
   cost, path = get_travel_cost(start, dest)
+
+  #print waypoints
+  wp = find_waypoint(path)
+  wp = pixle_to_coord(wp, [1.8, 1.2], [w, l])
+  print "Waypoints:", wp
 
   #render map with path
   render_map_2(image, path)
