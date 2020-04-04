@@ -6,6 +6,10 @@ from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 import math
 
+from geometry_msgs.msg import Twist
+PI = 3.1415926535897
+
+
 # GLOBALS 
 pose2d_sparki_odometry = None  # Pose2D message object, contains x,y,theta members in meters and radians
 # TODO: Track servo angle in radians
@@ -51,52 +55,35 @@ def move(path): #assumes an array of [ [x1, y1], [x2, y2], etc]
     for coord in path:
 	x = pose2d_sparki_odometry.x
 	y = pose2d_sparki_odometry.y
-	theta = pose2d_sparki_odometry.theta
 	b_err = math.atan2(coord[1] - y, coord[0] - x)
-	dis = math.sqrt(pow(2,coord[0] - x) + pow(2, coord[1] - y))
 
 	#move sparki to the berring error
-	msg = Float32MultiArray()  
-	msg.data = [4.0, 4.0]
+	rotate(b_err)
 	
-	rotate(180)
-
-	'''current_distance = 0
-	t0 = rospy.Time.now().to_sec()
-	while current_distance < dis:
-	     publisher_motor.publish(msg)
-             publisher_sim.publish(Empty())
-	     t1 = rospy.Time.now().to_sec()
-             current_distance = 8.0 * (t1 - t0)
-	print(pose2d_sparki_odometry)
-	msg.data = [0.0, 0.0]
-    	publisher_motor.publish(msg)'''
-
+	#move to the new x and y
+	new_pose = Pose2D()
+	new_pose = pose2d_sparki_odometry
+	new_pose.x = coord[0]
+	new_pose.y = coord[1]
+	publisher_odom.publish(new_pose)
+    	publisher_sim.publish(Empty())
+	rospy.sleep(5)
 	
 def rotate(angle):
-   #rotate for angel/speed seconds
 
-    rad_angle = to_radians(angle)
-    time_to_rotate = rad_angle/2.0 *10
-    print(time_to_rotate)
-    msg = Float32MultiArray()  
-    msg.data = [2.0, -2.0]
-
-    # Setting the current time for distance calculus
-    t0 = rospy.Time.now().to_sec()
-    t1 = rospy.Time.now().to_sec()
-    
-    while(t1 - t0 <= time_to_rotate):
-	publisher_motor.publish(msg)
-        publisher_sim.publish(Empty())
-	t1 = rospy.Time.now().to_sec()
-
-    print(pose2d_sparki_odometry.theta)
-    print("ALL DONE ROATING")
-    msg.data = [0.0, 0.0]
-    publisher_motor.publish(msg)	
+    #get and calc sparkis new theta
+    theta = pose2d_sparki_odometry.theta
+    goal_theta = theta + to_radians(angle)
+   
+    #make a Pose2D() message and publish new odometry with new theta
+    new_pose = Pose2D()
+    new_pose = pose2d_sparki_odometry
+    new_pose.theta = goal_theta
+    publisher_odom.publish(new_pose)
     publisher_sim.publish(Empty())
-    rospy.sleep(10)
+
+    rospy.sleep(5)
+    
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
@@ -114,7 +101,7 @@ def main():
         # TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
-
+	'''
        	msg = Float32MultiArray()     
 	msg.data = [1.0,1.0]
 	print(pose2d_sparki_odometry.theta)
@@ -126,9 +113,11 @@ def main():
         # TODO: Implement loop closure here
         x,y = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
         #print("sxsy", starting_x, starting_y, x,y)
-
-	arr = [[1.5, 0], [1.7, 0]]
+	'''
+	arr = [[1.4, 1], [1.7, 0]]
 	move(arr)
+	#print(pose2d_sparki_odometry)
+	#rotate(90)
       
 
 
@@ -141,8 +130,9 @@ def main():
         else:
             print("Cycle time exceeded: ", delay_time)
 
+
 def init():
-    global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim
+    global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_sim, velocity_publisher
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
     global servo_angle, starting_x, starting_y
@@ -155,6 +145,8 @@ def init():
     publisher_sim = rospy.Publisher('/sparki/render_sim', Empty, queue_size=10)
     subscriber_odometry = rospy.Subscriber("/sparki/odometry", Pose2D, callback_update_odometry)
     subscriber_state = rospy.Subscriber("/sparki/state", String, callback_update_state)
+
+    velocity_publisher = rospy.Publisher('/sparki/cmd_vel', Twist, queue_size=10)
     rospy.sleep(0.5)
 
     # TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
