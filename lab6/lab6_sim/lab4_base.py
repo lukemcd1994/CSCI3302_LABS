@@ -41,25 +41,26 @@ subscriber_state = None
 IR_THRESHOLD = 300  # IR sensor threshold for detecting black track. Change as necessary.
 CYCLE_TIME = 0.01  # In seconds
 
-def to_radians( deg):
+def to_radians(deg):
   return  deg * 3.14159/180.
 
-def to_degrees( rad):
+def to_degrees(rad):
   return  rad * 180/3.14159
 
 def move(path): #assumes an array of [ [x1, y1], [x2, y2], etc]
+    global pose2d_sparki_odometry
     for coord in path:
-	x = pose2d_sparki_odometry.x
-	y = pose2d_sparki_odometry.y
-	theta = pose2d_sparki_odometry.theta
-	b_err = math.atan2(coord[1] - y, coord[0] - x)
-	dis = math.sqrt(pow(2,coord[0] - x) + pow(2, coord[1] - y))
+        x = pose2d_sparki_odometry.x
+        y = pose2d_sparki_odometry.y
+        theta = pose2d_sparki_odometry.theta
+        b_err = math.atan2(coord[1] - y, coord[0] - x)
+        dis = math.sqrt(pow(2,coord[0] - x) + pow(2, coord[1] - y))
 
-	#move sparki to the berring error
-	msg = Float32MultiArray()  
-	msg.data = [4.0, 4.0]
-	
-	rotate(180)
+        #move sparki to the berring error
+        msg = Float32MultiArray()
+        msg.data = [4.0, 4.0]
+
+        rotate(180)
 
 	'''current_distance = 0
 	t0 = rospy.Time.now().to_sec()
@@ -74,7 +75,7 @@ def move(path): #assumes an array of [ [x1, y1], [x2, y2], etc]
 
 	
 def rotate(angle):
-   #rotate for angel/speed seconds
+    #rotate for angel/speed seconds
 
     rad_angle = to_radians(angle)
     time_to_rotate = rad_angle/2.0 *10
@@ -87,9 +88,9 @@ def rotate(angle):
     t1 = rospy.Time.now().to_sec()
     
     while(t1 - t0 <= time_to_rotate):
-	publisher_motor.publish(msg)
+        publisher_motor.publish(msg)
         publisher_sim.publish(Empty())
-	t1 = rospy.Time.now().to_sec()
+        t1 = rospy.Time.now().to_sec()
 
     print(pose2d_sparki_odometry.theta)
     print("ALL DONE ROATING")
@@ -115,9 +116,14 @@ def main():
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-       	msg = Float32MultiArray()     
-	msg.data = [1.0,1.0]
-	print(pose2d_sparki_odometry.theta)
+        arr = [[1.5, 0], [1.7, 0]]
+        movement move(arr)
+
+       	msg = Float32MultiArray()
+        msg.data = [1.0,1.0]
+        print(pose2d_sparki_odometry.theta)
+
+
 
         publisher_motor.publish(msg)
         publisher_sim.publish(Empty())
@@ -126,9 +132,6 @@ def main():
         # TODO: Implement loop closure here
         x,y = pose2d_sparki_odometry.x, pose2d_sparki_odometry.y
         #print("sxsy", starting_x, starting_y, x,y)
-
-	arr = [[1.5, 0], [1.7, 0]]
-	move(arr)
       
 
 
