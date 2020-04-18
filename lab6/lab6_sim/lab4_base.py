@@ -54,7 +54,7 @@ def to_degrees(rad):
 def move(path): #assumes an array of [ [x1, y1], [x2, y2], etc]
     global pose2d_sparki_odometry
     for coord in path:
-<<<<<<< HEAD
+# <<<<<<< HEAD
 	x = pose2d_sparki_odometry.x
 	y = pose2d_sparki_odometry.y
 	b_err = math.atan2(coord[1] - y, coord[0] - x)
@@ -72,34 +72,34 @@ def move(path): #assumes an array of [ [x1, y1], [x2, y2], etc]
 	rospy.sleep(5)
 	
 def rotate(angle):
-=======
-        x = pose2d_sparki_odometry.x
-        y = pose2d_sparki_odometry.y
-        theta = pose2d_sparki_odometry.theta
-        b_err = math.atan2(coord[1] - y, coord[0] - x)
-        dis = math.sqrt(pow(2,coord[0] - x) + pow(2, coord[1] - y))
-
-        #move sparki to the berring error
-        msg = Float32MultiArray()
-        msg.data = [4.0, 4.0]
-
-        rotate(180)
-
-	'''current_distance = 0
-	t0 = rospy.Time.now().to_sec()
-	while current_distance < dis:
-	     publisher_motor.publish(msg)
-             publisher_sim.publish(Empty())
-	     t1 = rospy.Time.now().to_sec()
-             current_distance = 8.0 * (t1 - t0)
-	print(pose2d_sparki_odometry)
-	msg.data = [0.0, 0.0]
-    	publisher_motor.publish(msg)'''
-
-	
-def rotate(angle):
-    #rotate for angel/speed seconds
->>>>>>> 301051774c8b59f794f0d4de6b865faeaf20933d
+# =======
+#         x = pose2d_sparki_odometry.x
+#         y = pose2d_sparki_odometry.y
+#         theta = pose2d_sparki_odometry.theta
+#         b_err = math.atan2(coord[1] - y, coord[0] - x)
+#         dis = math.sqrt(pow(2,coord[0] - x) + pow(2, coord[1] - y))
+#
+#         #move sparki to the berring error
+#         msg = Float32MultiArray()
+#         msg.data = [4.0, 4.0]
+#
+#         rotate(180)
+#
+# 	'''current_distance = 0
+# 	t0 = rospy.Time.now().to_sec()
+# 	while current_distance < dis:
+# 	     publisher_motor.publish(msg)
+#              publisher_sim.publish(Empty())
+# 	     t1 = rospy.Time.now().to_sec()
+#              current_distance = 8.0 * (t1 - t0)
+# 	print(pose2d_sparki_odometry)
+# 	msg.data = [0.0, 0.0]
+#     	publisher_motor.publish(msg)'''
+#
+#
+# def rotate(angle):
+#     #rotate for angel/speed seconds
+# >>>>>>> 301051774c8b59f794f0d4de6b865faeaf20933d
 
     #get and calc sparkis new theta
     theta = pose2d_sparki_odometry.theta
@@ -114,20 +114,20 @@ def rotate(angle):
 
     rospy.sleep(5)
     
-<<<<<<< HEAD
-=======
-    while(t1 - t0 <= time_to_rotate):
-        publisher_motor.publish(msg)
-        publisher_sim.publish(Empty())
-        t1 = rospy.Time.now().to_sec()
-
-    print(pose2d_sparki_odometry.theta)
-    print("ALL DONE ROATING")
-    msg.data = [0.0, 0.0]
-    publisher_motor.publish(msg)	
-    publisher_sim.publish(Empty())
-    rospy.sleep(10)
->>>>>>> 301051774c8b59f794f0d4de6b865faeaf20933d
+# <<<<<<< HEAD
+# =======
+#     while(t1 - t0 <= time_to_rotate):
+#         publisher_motor.publish(msg)
+#         publisher_sim.publish(Empty())
+#         t1 = rospy.Time.now().to_sec()
+#
+#     print(pose2d_sparki_odometry.theta)
+#     print("ALL DONE ROATING")
+#     msg.data = [0.0, 0.0]
+#     publisher_motor.publish(msg)
+#     publisher_sim.publish(Empty())
+#     rospy.sleep(10)
+# >>>>>>> 301051774c8b59f794f0d4de6b865faeaf20933d
 
 def main():
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
@@ -170,12 +170,12 @@ def main():
         #print("sxsy", starting_x, starting_y, x,y)
 
 	'''
-	arr = [[1.4, 1], [1.7, 0]]
-	move(arr)
-	#print(pose2d_sparki_odometry)
-	#rotate(90)
-=======
->>>>>>> 301051774c8b59f794f0d4de6b865faeaf20933d
+        arr = [[1.4, 1], [1.7, 0]]
+        move(arr)
+        #print(pose2d_sparki_odometry)
+        #rotate(90)
+# =======
+# >>>>>>> 301051774c8b59f794f0d4de6b865faeaf20933d
       
 
 
