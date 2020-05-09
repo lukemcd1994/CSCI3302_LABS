@@ -3,13 +3,18 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 import math
 import time
-
+import copy
 
 #robot controller take agent, publisher
 
-#current loop time: 0.2
-#odometry format: {x:float, y:float, theta:float, mode:int}
 #modes: SEEK = 0, THROW = 1, OWN = 2
+
+#Helpers!
+def calc_dist(loc1, loc2):
+    return math.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
+def calc_angle(loc1, loc2):
+    return math.atan2((loc2[1] - loc1[1]), (loc2[0] - loc1[0]))
+
 
 #version 1: walk to the ball and throw at goal
 class Agent_v1:
@@ -149,6 +154,67 @@ class Publisher_v1:
 #TODO: get_odometry
 def get_odometry():
     return []
+
+#X,t_range: [min, max]
+def update_loc(cur_loc, angle, speed, time_slice, x_range, y_range):
+    dist = speed*time_slice
+    x_min, x_max, y_min, y_max = *x_range, *y_range
+    x,y = cur_loc
+    x += dist*math.cos(angle)
+    y += dist*math.sin(angle)
+    if x<x_min:
+        x = x_min+(x_min-x)
+        angle = math.pi - angle
+    elif x>x_max:
+        x = x_max-(x-x_max)
+        angle = math.pi - angle
+    if y<y_min:
+        x = x_min+(x_min-x)
+        angle = -angle
+    elif y>y_max:
+        x = x_max-(x-x_max)
+        angle = -angle
+    return x,y,angle
+
+def eval_angle(self_loc, opponent_loc, goal_loc):
+    BALL_SPEED = 2
+    TIME_SLICE = 1
+    AGENT_SPEED = 0.25
+    MAX_GOAL_ERR = 0.5
+    x_range, y_range = [-6,6, -2,2]
+    #list all the forward angle that can possibly be optimal
+    theta_map_original = [math.pi/100*i for i in range(20,80)]
+    #this map could be updated as ball hit wall
+    theta_map = copy.deepcopy(theta_map_original)
+    l = len(theta_map)
+
+    #helper maps
+    #each possibility is marked 1 if possible, 0 if not optimal
+    bit_map = [1 for _ in theta_map]
+    loc_map = [self_loc for _ in theta_map]
+
+    #time counter
+    t = 0
+    while sum(bit_map) > 0:
+        t += TIME_SLICE
+        for i in range(l):
+            if bit_map[i] != 0:
+                #update location and angle
+                x,y,a = update_loc(loc_map[i], theta_map[i], BALL_SPEED, TIME_SLICE, x_range, y_range)
+                loc_map[i] = x,y
+                theta_map[i] = a
+
+                #check if within reach
+                reach = t*AGENT_SPEED
+                if calc_dist(loc_map[i], opponent_loc) <= reach:
+                    bit_map[i] = 0
+
+                #check if at goal
+                if calc_dist(loc_map[i], goal_loc) <= MAX_GOAL_ERR:
+                    return theta_map_original[i]
+
+    #return None if no optimal found, agent should handle it and execute a lesser command
+    return None
 
 ###MY QUESTIONS
 # How do agent get self location
